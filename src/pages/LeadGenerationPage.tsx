@@ -115,8 +115,12 @@ const LeadGenerationPage = () => {
     setShowPaymentModal(false);
     toast({
       title: 'Payment Successful',
-      description: 'You can now generate your leads.',
+      description: 'Starting lead generation process...',
     });
+    // Automatically start lead generation after successful payment
+    setTimeout(() => {
+      handleGenerateLeads();
+    }, 1000);
   };
 
   const handleFreeLeadsActivation = async () => {
@@ -164,8 +168,12 @@ const LeadGenerationPage = () => {
       
       toast({
         title: "Free Trial Activated!",
-        description: "You can now generate 10 free leads. Configure your targeting criteria below.",
+        description: "Starting lead generation process...",
       });
+      // Automatically start lead generation after free leads activation
+      setTimeout(() => {
+        handleGenerateLeads();
+      }, 1000);
     } catch (error) {
       console.error('Error activating free leads:', error);
       toast({
@@ -872,47 +880,37 @@ const LeadGenerationPage = () => {
                     </Button>
                   )}
 
-                  {/* Payment Section - Blur when free leads are selected */}
-                  <div className={`${isFreeRequest ? 'opacity-50 pointer-events-none' : ''}`}>
-                    {!isFreeRequest && paymentStatus !== 'success' && (
-                      <Button 
-                        onClick={handlePayment} 
-                        className="w-full h-12 text-lg font-semibold" 
-                        disabled={paymentStatus === 'processing' || !canProceedToPayment()}
-                      >
-                        {paymentStatus === 'processing' ? (
-                          <>
-                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                            Processing Payment...
-                          </>
-                        ) : (
-                          <>
-                            <CreditCard className="mr-2 h-5 w-5" />
-                            Choose Package & Pay
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </div>
+                  {/* Payment Button - Only show if user has used free leads or payment is not successful */}
+                  {!isFreeRequest && paymentStatus !== 'success' && (
+                    <Button 
+                      onClick={handlePayment} 
+                      className="w-full h-12 text-lg font-semibold" 
+                      disabled={paymentStatus === 'processing' || !canProceedToPayment()}
+                    >
+                      {paymentStatus === 'processing' ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Processing Payment...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="mr-2 h-5 w-5" />
+                          Choose Package & Pay
+                        </>
+                      )}
+                    </Button>
+                  )}
 
-                  <Button 
-                    className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
-                    disabled={!canGenerateLeads || isGenerating} 
-                    onClick={handleGenerateLeads}
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        Generating Leads...
-                      </>
-                    ) : (
-                      <>
-                        <Target className="mr-2 h-5 w-5" />
-                        {isFreeRequest ? 'Generate 10 Free Leads' : 'Generate Leads'}
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </>
-                    )}
-                  </Button>
+                  {/* Show generating status when processing */}
+                  {isGenerating && (
+                    <Button 
+                      className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
+                      disabled={true}
+                    >
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Generating Leads...
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
           </div>
@@ -948,127 +946,9 @@ const LeadGenerationPage = () => {
             </Carousel>
           </motion.section>
 
-          {/* Final CTA Section */}
-          {!freeLeadsUsed && !isFreeRequest && (
-            <motion.section 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="mt-20 mb-12"
-            >
-              <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 shadow-xl">
-                <CardContent className="p-8 text-center">
-                  <div className="flex justify-center mb-4">
-                    <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full p-4">
-                      <Gift className="h-8 w-8" />
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-3xl font-bold text-gray-900 mb-4">
-                    Not Ready to Commit? Try <span className="text-green-600">10 FREE Leads</span> First!
-                  </h3>
-                  
-                  <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-                    Experience the quality of our AI-powered lead generation without any risk. 
-                    Get 10 verified leads completely free - no credit card required.
-                  </p>
-                  
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button 
-                      size="lg" 
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 text-lg font-semibold"
-                      onClick={handleFreeLeadsActivation}
-                    >
-                      <Gift className="mr-2 h-5 w-5" />
-                      Start with 10 Free Leads
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                    
-                    <Button 
-                      size="lg" 
-                      variant="outline" 
-                      className="border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-8 py-4 text-lg"
-                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    >
-                      <Target className="mr-2 h-5 w-5" />
-                      Get 100 Leads for $20
-                    </Button>
-                  </div>
-                  
-                  <div className="flex justify-center gap-6 mt-6 text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                      No credit card required
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                      Instant access
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                      Same quality leads
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.section>
-          )}
 
-          {/* Final CTA Section for Users Who Used Free Leads */}
-          {freeLeadsUsed && !isFreeRequest && (
-            <motion.section 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="mt-20 mb-12"
-            >
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-xl">
-                <CardContent className="p-8 text-center">
-                  <div className="flex justify-center mb-4">
-                    <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full p-4">
-                      <Target className="h-8 w-8" />
-                    </div>
-                  </div>
-                  
-                  <h3 className="text-3xl font-bold text-gray-900 mb-4">
-                    Ready to Scale Up? Get <span className="text-blue-600">100 Verified Leads</span> for $20!
-                  </h3>
-                  
-                  <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-                    You've experienced our quality with free leads. Now scale your business 
-                    with 100 high-quality, verified leads at an unbeatable price.
-                  </p>
-                  
-                  <div className="flex justify-center">
-                    <Button 
-                      size="lg" 
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-lg font-semibold"
-                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    >
-                      <Target className="mr-2 h-5 w-5" />
-                      Get 100 Leads for $20
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </div>
-                  
-                  <div className="flex justify-center gap-6 mt-6 text-sm text-gray-500">
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-blue-500 mr-1" />
-                      Same high quality
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-blue-500 mr-1" />
-                      Instant delivery
-                    </div>
-                    <div className="flex items-center">
-                      <CheckCircle className="h-4 w-4 text-blue-500 mr-1" />
-                      Money-back guarantee
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.section>
-          )}
+
+
 
           {/* Payment Modal */}
           <SimplePaymentModal
