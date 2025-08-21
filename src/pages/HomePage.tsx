@@ -140,7 +140,7 @@ const HomePage: React.FC = () => {
                 </span>
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <div className="flex justify-center mb-12">
                 <Button 
                   size="lg" 
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 text-lg"
@@ -148,17 +148,6 @@ const HomePage: React.FC = () => {
                 >
                   <Gift className="mr-2 h-5 w-5" />
                   Get 10 Free Leads
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-                
-                <Button 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-2 border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white px-8 py-4 text-lg"
-                  onClick={() => window.location.href = '/auth'}
-                >
-                  <Users className="mr-2 h-5 w-5" />
-                  Learn More
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
@@ -220,16 +209,12 @@ const HomePage: React.FC = () => {
                     Claim Your 10 Free Leads
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                  
-                  <Button 
-                    size="lg" 
-                    variant="outline" 
-                    className="border-2 border-green-600 text-green-600 hover:bg-green-600 hover:text-white px-8 py-4 text-lg"
-                    onClick={() => window.location.href = '/auth'}
-                  >
-                    <Clock className="mr-2 h-5 w-5" />
-                    Limited Time Offer
-                  </Button>
+                </div>
+                
+                <div className="text-center mb-6">
+                  <p className="text-sm text-orange-600 font-semibold">
+                    ⏰ <span className="underline">Limited Time Offer</span> - Don't miss out!
+                  </p>
                 </div>
                 
                 <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
