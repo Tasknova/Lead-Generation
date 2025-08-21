@@ -134,6 +134,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_orders: {
+        Row: {
+          id: string
+          user_id: string
+          user_email: string
+          package_id: string
+          amount: number
+          currency: string
+          status: string
+          payment_id: string | null
+          signature: string | null
+          leads_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          user_email: string
+          package_id: string
+          amount: number
+          currency?: string
+          status?: string
+          payment_id?: string | null
+          signature?: string | null
+          leads_count: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          user_email?: string
+          package_id?: string
+          amount?: number
+          currency?: string
+          status?: string
+          payment_id?: string | null
+          signature?: string | null
+          leads_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

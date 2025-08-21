@@ -2,10 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import Navbar from '@/components/ui/navbar';
+import { getPaymentHistory } from '@/integrations/razorpay/payment';
 
 import type { Database } from '@/integrations/supabase/types';
-import { Loader2, CheckCircle2, XCircle, RefreshCw, Download, Users } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, RefreshCw, Download, Users, CreditCard, Calendar, IndianRupee } from 'lucide-react';
 
 // Types
 // These should match your Supabase types
@@ -15,7 +18,9 @@ type LeadRequest = Database['public']['Tables']['lead_requests']['Row'] & { stat
 
 const OrdersPage: React.FC = () => {
   const [leadRequests, setLeadRequests] = useState<LeadRequest[]>([]);
+  const [paymentOrders, setPaymentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paymentLoading, setPaymentLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
   // Function to format lead description for display
@@ -129,13 +134,31 @@ const OrdersPage: React.FC = () => {
     }
   };
 
+  const fetchPaymentHistory = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found.');
+      
+      const paymentData = await getPaymentHistory(user.id);
+      setPaymentOrders(paymentData);
+    } catch (error) {
+      console.error('Error fetching payment history:', error);
+      setPaymentOrders([]);
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
   useEffect(() => {
     const initializePage = async () => {
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
-        await fetchLeadRequests();
+        await Promise.all([
+          fetchLeadRequests(),
+          fetchPaymentHistory()
+        ]);
       }
     };
 
@@ -189,7 +212,11 @@ const OrdersPage: React.FC = () => {
 
   const handleRefresh = async () => {
     setLoading(true);
-    await fetchLeadRequests();
+    setPaymentLoading(true);
+    await Promise.all([
+      fetchLeadRequests(),
+      fetchPaymentHistory()
+    ]);
   };
 
 
@@ -211,17 +238,30 @@ const OrdersPage: React.FC = () => {
           </Button>
         </div>
         
-        <Card className="w-full overflow-hidden shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Tabs defaultValue="lead-requests" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="lead-requests" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
               Lead Requests
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            </CardTitle>
-            <CardDescription>
-              A history of all your lead generation requests. Updates in real-time.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+            </TabsTrigger>
+            <TabsTrigger value="payment-history" className="flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Payment History
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="lead-requests">
+            <Card className="w-full overflow-hidden shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Lead Requests
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                </CardTitle>
+                <CardDescription>
+                  A history of all your lead generation requests. Updates in real-time.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin mr-2" />
@@ -306,18 +346,73 @@ const OrdersPage: React.FC = () => {
                 </Button>
               </div>
             )}
-          </CardContent>
-        </Card>
-        
-        <Card className="w-full overflow-hidden shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle>Notion Templates Orders</CardTitle>
-            <CardDescription>All your Notion Templates orders will appear here.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-gray-500">No Notion Templates orders yet.</p>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="payment-history">
+            <Card className="w-full overflow-hidden shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Payment History
+                </CardTitle>
+                <CardDescription>
+                  View all your payment transactions and lead packages purchased.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {paymentLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    <p>Loading payment history...</p>
+                  </div>
+                ) : paymentOrders.length > 0 ? (
+                  <div className="space-y-4">
+                    {paymentOrders.map((order) => (
+                      <div key={order.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge variant={order.status === 'success' ? 'default' : order.status === 'failed' ? 'destructive' : 'secondary'}>
+                                {order.status === 'success' ? 'Paid' : order.status === 'failed' ? 'Failed' : 'Pending'}
+                              </Badge>
+                              <span className="text-sm text-gray-500">
+                                {order.leads_count} leads
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              {new Date(order.created_at).toLocaleString()}
+                            </p>
+                            {order.payment_id && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                Payment ID: {order.payment_id}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-1 text-lg font-semibold">
+                              <IndianRupee className="h-4 w-4" />
+                              {(order.amount / 100).toFixed(2)}
+                            </div>
+                            <p className="text-sm text-gray-500">{order.package_id} package</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 mb-2">No payment history yet.</p>
+                    <p className="text-sm text-gray-400">Your payment transactions will appear here.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </>
   );

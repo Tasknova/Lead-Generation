@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/integrations/supabase/types';
 import Navbar from '@/components/ui/navbar';
+import SimplePaymentModal from '@/components/payment/SimplePaymentModal';
 import { motion } from 'framer-motion';
 
 const LeadGenerationPage = () => {
@@ -25,6 +26,7 @@ const LeadGenerationPage = () => {
   const [fullName, setFullName] = useState<string>('');
   const [freeLeadsUsed, setFreeLeadsUsed] = useState<boolean>(false);
   const [isFreeRequest, setIsFreeRequest] = useState<boolean>(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
   const [activeMode, setActiveMode] = useState<'dropdown' | 'manual'>('dropdown');
@@ -105,18 +107,16 @@ const LeadGenerationPage = () => {
   }, []);
 
   const handlePayment = () => {
-    setPaymentStatus('processing');
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentSuccess = () => {
+    setPaymentStatus('success');
+    setShowPaymentModal(false);
     toast({
-      title: 'Processing Payment',
-      description: 'Please wait while we process your payment.',
+      title: 'Payment Successful',
+      description: 'You can now generate your leads.',
     });
-    setTimeout(() => {
-      setPaymentStatus('success');
-      toast({
-        title: 'Payment Successful',
-        description: 'You can now generate your leads.',
-      });
-    }, 2000);
   };
 
   const handleFreeLeadsActivation = async () => {
@@ -872,10 +872,10 @@ const LeadGenerationPage = () => {
                           Processing Payment...
                         </>
                       ) : (
-                        <>
-                          <CreditCard className="mr-2 h-5 w-5" />
-                          Pay $20 to Continue
-                        </>
+                                              <>
+                        <CreditCard className="mr-2 h-5 w-5" />
+                        Choose Package & Pay
+                      </>
                       )}
                     </Button>
                   )}
@@ -1054,6 +1054,13 @@ const LeadGenerationPage = () => {
               </Card>
             </motion.section>
           )}
+
+          {/* Payment Modal */}
+          <SimplePaymentModal
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            onSuccess={handlePaymentSuccess}
+          />
         </main>
       </motion.div>
       </div>
