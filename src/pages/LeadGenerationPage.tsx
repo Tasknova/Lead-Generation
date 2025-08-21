@@ -172,7 +172,8 @@ const LeadGenerationPage = () => {
       });
       // Automatically start lead generation after free leads activation
       setTimeout(() => {
-        handleGenerateLeads();
+        // Ensure isFreeRequest is true for this call
+        handleGenerateLeadsWithFreeFlag();
       }, 1000);
     } catch (error) {
       console.error('Error activating free leads:', error);
@@ -304,7 +305,17 @@ const LeadGenerationPage = () => {
     return JSON.stringify(jsonData, null, 2);
   };
   
+  const handleGenerateLeadsWithFreeFlag = async () => {
+    // Force isFreeRequest to true for this call
+    const isFreeRequestFlag = true;
+    await handleGenerateLeadsInternal(isFreeRequestFlag);
+  };
+
   const handleGenerateLeads = async () => {
+    await handleGenerateLeadsInternal(isFreeRequest);
+  };
+
+  const handleGenerateLeadsInternal = async (freeRequestFlag: boolean) => {
     let finalDescription = '';
     let jsonDescription = '';
     
@@ -342,7 +353,7 @@ const LeadGenerationPage = () => {
           user_name: fullName || user.email!,
           lead_description: jsonDescription, // Use JSON format for dropdown, plain text for manual
           status: 'running',
-          is_free_request: isFreeRequest // Track if this is a free request
+          is_free_request: freeRequestFlag // Track if this is a free request
         })
         .select('id');
       const insertData = Array.isArray(insertDataArr) ? insertDataArr[0] : insertDataArr;
@@ -366,8 +377,8 @@ const LeadGenerationPage = () => {
         user_name: fullName || user.email!,
         user_email: user.email!,
         request_type: activeMode, // 'dropdown' or 'manual'
-        is_free_request: isFreeRequest, // Identify free requests
-        lead_count: isFreeRequest ? 10 : 100 // Set lead count based on request type
+        is_free_request: freeRequestFlag, // Identify free requests
+        lead_count: freeRequestFlag ? 10 : 100 // Set lead count based on request type
       };
 
       console.log('=== WEBHOOK DEBUG ===');
@@ -375,6 +386,8 @@ const LeadGenerationPage = () => {
       console.log('Webhook URL:', webhookUrl);
       console.log('User ID:', user.id);
       console.log('User Email:', user.email);
+      console.log('Free Request Flag:', freeRequestFlag);
+      console.log('Is Free Request State:', isFreeRequest);
 
       try {
         const response = await fetch(webhookUrl, {
