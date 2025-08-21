@@ -562,26 +562,11 @@ const LeadGenerationPage = () => {
             className="text-center mb-12"
           >
             <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {isFreeRequest ? '🎁 Configure Your 10 Free Leads' : '🎯 Get 100 Verified Leads'}
+              🎯 Lead Generation
             </h1>
             <p className="text-xl text-gray-600 mb-2">
-              {isFreeRequest ? 'Customize your targeting criteria for your free leads' : 'Only $20 - Start Growing Your Business Today!'}
+              Generate high-quality leads for your business
             </p>
-            {!freeLeadsUsed && !isFreeRequest && (
-              <p className="text-lg text-green-600 font-semibold mb-2">
-                🎁 Or try our <span className="underline">10 FREE leads</span> first - No credit card required!
-              </p>
-            )}
-            {freeLeadsUsed && !isFreeRequest && (
-              <p className="text-lg text-blue-600 font-semibold mb-2">
-                ✅ You've used your free leads. Ready to scale up with 100 leads for $20!
-              </p>
-            )}
-            {isFreeRequest && (
-              <p className="text-lg text-green-600 font-semibold mb-2">
-                🎁 You're configuring your 10 FREE leads - No payment required!
-              </p>
-            )}
             <div className="flex justify-center items-center gap-8 mt-6">
               {stats.map((stat, index) => (
                 <motion.div
@@ -601,104 +586,7 @@ const LeadGenerationPage = () => {
             </div>
           </motion.div>
 
-          {/* 10 Free Leads Offer Section */}
-          {!freeLeadsUsed && !isFreeRequest && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mb-8"
-            >
-              <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="text-center">
-                    <div className="flex justify-center mb-4">
-                      <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full p-3">
-                        <Gift className="h-6 w-6" />
-                      </div>
-                    </div>
-                    
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      🎁 Try Before You Buy: <span className="text-green-600">10 FREE Leads</span>
-                    </h3>
-                    
-                    <p className="text-gray-600 mb-4">
-                      Experience our AI-powered lead generation with 10 free leads. 
-                      No credit card required. See the quality for yourself!
-                    </p>
-                    
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <Button 
-                        size="lg" 
-                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-6 py-3 font-semibold"
-                        onClick={handleFreeLeadsActivation}
-                      >
-                        <Gift className="mr-2 h-5 w-5" />
-                        Get 10 Free Leads Now
-                        <ArrowRight className="ml-2 h-5 w-5" />
-                      </Button>
-                    </div>
-                    
-                    <div className="flex justify-center gap-4 mt-4 text-sm text-gray-500">
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                        No credit card
-                      </div>
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                        Instant access
-                      </div>
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                        Full features
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
 
-          {/* Free Leads Already Used Message */}
-          {freeLeadsUsed && !isFreeRequest && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mb-8"
-            >
-              <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-lg">
-                <CardContent className="p-6">
-                  <div className="text-center">
-                    <div className="flex justify-center mb-4">
-                      <div className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-full p-3">
-                        <CheckCircle className="h-6 w-6" />
-                      </div>
-                    </div>
-                    
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      ✅ You've Used Your Free Leads
-                    </h3>
-                    
-                    <p className="text-gray-600 mb-4">
-                      You've already enjoyed your 10 free leads. Ready to scale up? 
-                      Get 100 verified leads for just $20!
-                    </p>
-                    
-                    <Button 
-                      size="lg" 
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 font-semibold"
-                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                    >
-                      <Target className="mr-2 h-5 w-5" />
-                      Get 100 Leads for $20
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
 
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -862,7 +750,7 @@ const LeadGenerationPage = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center text-2xl">
                     <Zap className="mr-3 h-6 w-6 text-blue-600" />
-                    {isFreeRequest ? 'Generate Your Free Leads' : 'Payment & Generate Leads'}
+                    Generate Leads
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
