@@ -466,8 +466,8 @@ const LeadGenerationPage = () => {
   ];
 
   const stats = [
-    { label: "Leads Generated", value: "50,000+", icon: <UsersIcon className="h-6 w-6" /> },
-    { label: "Success Rate", value: "95%", icon: <TrendingUp className="h-6 w-6" /> },
+            { label: "Leads Generated", value: "51,450+", icon: <UsersIcon className="h-6 w-6" /> },
+        { label: "Success Rate", value: "93%", icon: <TrendingUp className="h-6 w-6" /> },
     { label: "Average Response", value: "2.3 days", icon: <CheckCircle className="h-6 w-6" /> },
     { label: "Customer Satisfaction", value: "4.9/5", icon: <Star className="h-6 w-6" /> }
   ];

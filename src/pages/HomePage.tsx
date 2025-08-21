@@ -54,8 +54,8 @@ const HomePage: React.FC = () => {
   ];
 
   const stats = [
-    { number: "10K+", label: "Leads Generated", icon: <Users className="h-4 w-4" /> },
-    { number: "95%", label: "Accuracy Rate", icon: <CheckCircle className="h-4 w-4" /> },
+            { number: "51,450+", label: "Leads Generated", icon: <Users className="h-4 w-4" /> },
+            { number: "93%", label: "Accuracy Rate", icon: <CheckCircle className="h-4 w-4" /> },
     { number: "24/7", label: "Processing", icon: <Clock className="h-4 w-4" /> },
     { number: "3x", label: "Faster Results", icon: <Zap className="h-4 w-4" /> }
   ];

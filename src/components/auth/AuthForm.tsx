@@ -223,7 +223,7 @@ const AuthForm: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 min-h-[calc(100vh-80px)]">
+    <div className="flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 min-h-[calc(100vh-64px)]">
       <Card className="w-full max-w-md relative">
 
         <CardHeader className="text-center">

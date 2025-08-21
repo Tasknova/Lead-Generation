@@ -83,7 +83,9 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
   if (session) {
     // User is logged in
+    console.log('User authenticated, current path:', location.pathname);
     if (isAuthPage) {
+      console.log('Redirecting from auth page to lead-generation');
       return <Navigate to="/lead-generation" replace />;
     }
 
