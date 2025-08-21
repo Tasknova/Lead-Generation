@@ -122,6 +122,11 @@ const AuthForm: React.FC = () => {
           title: 'Account created!',
           description: 'Please check your email for a confirmation link.',
         });
+        
+        // Redirect to lead generation page after successful signup
+        setTimeout(() => {
+          window.location.href = '/lead-generation';
+        }, 2000);
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: emailForm.email,
@@ -134,6 +139,11 @@ const AuthForm: React.FC = () => {
           title: 'Welcome back!',
           description: "You've been logged in successfully.",
         });
+        
+        // Redirect to lead generation page after successful login
+        setTimeout(() => {
+          window.location.href = '/lead-generation';
+        }, 1500);
       }
     } catch (error: any) {
       toast({
@@ -213,20 +223,12 @@ const AuthForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 min-h-[calc(100vh-80px)]">
       <Card className="w-full max-w-md relative">
-        <a
-          href="/"
-          className="absolute top-4 right-4"
-          aria-label="Go to Home"
-        >
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <HomeIcon className="h-6 w-6" />
-          </Button>
-        </a>
+
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">
-            {authMode === 'signup' ? 'SignUp' : 'LogIn'}
+            {authMode === 'signup' ? 'SignUp' : 'Log-in'}
           </CardTitle>
         </CardHeader>
         <CardContent>

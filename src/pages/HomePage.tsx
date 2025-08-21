@@ -98,7 +98,7 @@ const HomePage: React.FC = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <img src="/logo2.jpg" alt="Tasknova Logo" className="w-32 h-20 object-contain" />
+                              <img src="/logo2.png" alt="Tasknova Logo" className="w-32 h-20 object-contain" />
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" asChild>
@@ -446,48 +446,9 @@ const HomePage: React.FC = () => {
         </section>
 
         {/* Footer */}
-        <footer className="bg-gray-900 text-white py-12">
+        <footer className="bg-white text-gray-600 py-8">
           <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="flex items-center space-x-2 mb-4 md:mb-0">
-                <img src="/logo2.jpg" alt="Tasknova Logo" className="w-24 h-16 object-contain" />
-              </div>
-              <div className="flex space-x-6 text-gray-400">
-                <a 
-                  href="https://tasknova.io" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
-                >
-                  About Us
-                </a>
-                <a 
-                  href="https://tasknova.io/contact-us/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
-                >
-                  Contact
-                </a>
-                <a 
-                  href="https://tasknova.io/privacy-policy/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
-                >
-                  Privacy Policy
-                </a>
-                <a 
-                  href="https://tasknova.io/terms-and-conditions/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:text-white transition-colors"
-                >
-                  Terms & Conditions
-                </a>
-              </div>
-            </div>
-            <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <div className="text-center">
               <p>&copy; 2025 All rights reserved.</p>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Home, Zap, ShoppingCart } from 'lucide-react';
+import { Home, Zap, ShoppingCart, User, LogIn, LogOut } from 'lucide-react';
 
 // Profile context for sharing avatarUrl
 export const ProfileContext = React.createContext<{ avatarUrl?: string } | undefined>(undefined);
@@ -11,15 +11,21 @@ const navLinks = [
   { to: '/orders', label: 'Your Orders', icon: <ShoppingCart className="inline-block w-5 h-5 mr-1" /> },
 ];
 
+const authNavLinks = [
+  { to: '/', label: 'Home', icon: <Home className="inline-block w-5 h-5 mr-1" /> },
+];
+
 const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const getProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        setIsAuthenticated(true);
         // Always use avatar_url from profiles table
         const { data } = await supabase
           .from('profiles')
@@ -28,6 +34,7 @@ const Navbar: React.FC = () => {
           .single();
         setAvatarUrl(data?.avatar_url || null);
       } else {
+        setIsAuthenticated(false);
         setAvatarUrl(null);
       }
     };
@@ -42,10 +49,12 @@ const Navbar: React.FC = () => {
   return (
     <nav className="w-full bg-white border-b shadow-sm mb-6">
       <div className="container mx-auto flex items-center gap-4 py-1 px-4">
-        <Link to="/lead-generation" className="mr-4 flex items-center">
-          <img src="/logo2.jpg" alt="Logo" className="w-32 h-20 object-contain" />
+        <Link to={isAuthenticated ? "/lead-generation" : "/"} className="mr-4 flex items-center">
+          <img src="/logo2.png" alt="Logo" className="w-32 h-20 object-contain" />
         </Link>
-        {navLinks.map(link => (
+        
+        {/* Navigation Links - Show different links based on authentication */}
+        {(isAuthenticated ? navLinks : authNavLinks).map(link => (
           <Link
             key={link.to}
             to={link.to}
@@ -55,27 +64,41 @@ const Navbar: React.FC = () => {
             {link.label}
           </Link>
         ))}
+        
         <div className="ml-auto flex flex-row-reverse items-center gap-2">
-          <Link to="/profile">
-            {avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt="Profile"
-                className="w-10 h-10 rounded-full object-cover border"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-lg font-bold text-white border">
-                <span>👤</span>
-              </div>
-            )}
-          </Link>
-          {location.pathname.startsWith('/profile') && (
-            <button
-              onClick={handleSignOut}
-              className="px-3 py-2 rounded font-medium transition-colors duration-150 text-gray-700 hover:bg-gray-200 border border-gray-200"
+          {isAuthenticated ? (
+            <>
+              <Link to="/profile">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Profile"
+                    className="w-10 h-10 rounded-full object-cover border"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-lg font-bold text-white border">
+                    <User className="w-5 h-5 text-gray-600" />
+                  </div>
+                )}
+              </Link>
+              {location.pathname.startsWith('/profile') && (
+                <button
+                  onClick={handleSignOut}
+                  className="px-3 py-2 rounded font-medium transition-colors duration-150 text-gray-700 hover:bg-gray-200 border border-gray-200 flex items-center"
+                >
+                  <LogOut className="w-4 h-4 mr-1" />
+                  Sign Out
+                </button>
+              )}
+            </>
+          ) : (
+            <Link
+              to="/auth"
+              className="px-3 py-2 rounded font-medium transition-colors duration-150 text-gray-700 hover:bg-gray-200 border border-gray-200 flex items-center"
             >
-              Sign Out
-            </button>
+              <LogIn className="w-4 h-4 mr-1" />
+              Sign In
+            </Link>
           )}
         </div>
       </div>

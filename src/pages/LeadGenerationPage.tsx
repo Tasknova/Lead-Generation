@@ -860,25 +860,40 @@ const LeadGenerationPage = () => {
                     </label>
                   </div>
 
-                  {!isFreeRequest && paymentStatus !== 'success' && (
+                  {/* 10 Free Leads Button - Only show if user hasn't used free leads */}
+                  {!freeLeadsUsed && !isFreeRequest && (
                     <Button 
-                      onClick={handlePayment} 
-                      className="w-full h-12 text-lg font-semibold" 
-                      disabled={paymentStatus === 'processing' || !canProceedToPayment()}
+                      onClick={handleFreeLeadsActivation} 
+                      className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white mb-4" 
+                      disabled={!canProceedToPayment()}
                     >
-                      {paymentStatus === 'processing' ? (
-                        <>
-                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                          Processing Payment...
-                        </>
-                      ) : (
-                                              <>
-                        <CreditCard className="mr-2 h-5 w-5" />
-                        Choose Package & Pay
-                      </>
-                      )}
+                      <Gift className="mr-2 h-5 w-5" />
+                      Get 10 Free Leads
                     </Button>
                   )}
+
+                  {/* Payment Section - Blur when free leads are selected */}
+                  <div className={`${isFreeRequest ? 'opacity-50 pointer-events-none' : ''}`}>
+                    {!isFreeRequest && paymentStatus !== 'success' && (
+                      <Button 
+                        onClick={handlePayment} 
+                        className="w-full h-12 text-lg font-semibold" 
+                        disabled={paymentStatus === 'processing' || !canProceedToPayment()}
+                      >
+                        {paymentStatus === 'processing' ? (
+                          <>
+                            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                            Processing Payment...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="mr-2 h-5 w-5" />
+                            Choose Package & Pay
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
 
                   <Button 
                     className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 

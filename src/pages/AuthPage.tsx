@@ -1,6 +1,6 @@
 import React from 'react';
 import AuthForm from '@/components/auth/AuthForm';
-// import Navbar from '@/components/ui/navbar';
+import Navbar from '@/components/ui/navbar';
 import { useLocation } from 'react-router-dom';
 
 const AuthPage: React.FC = () => {
@@ -9,7 +9,7 @@ const AuthPage: React.FC = () => {
   const msg = params.get('msg');
   return (
     <>
-      {/* <Navbar /> */}
+      <Navbar />
       {msg && (
         <div className="mb-4 text-center text-red-600 font-semibold">{decodeURIComponent(msg)}</div>
       )}
