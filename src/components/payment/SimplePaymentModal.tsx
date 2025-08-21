@@ -27,8 +27,8 @@ const LEAD_PACKAGES: LeadPackage[] = [
     id: 'test',
     name: 'Test Package',
     leads: 1,
-    price: 1,
-    description: '₹1 test payment to verify integration'
+    price: 10,
+    description: '₹10 test payment to verify integration'
   },
   {
     id: 'basic',
@@ -119,44 +119,52 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
          throw new Error('Razorpay Key ID is not configured. Add VITE_RAZORPAY_KEY_ID to your .env file');
        }
 
-      // Create order in database first
-      const { data: orderData, error: orderError } = await supabase
-        .from('payment_orders')
-        .insert({
-          user_id: user.id,
-          user_email: user.email!,
-          package_id: selectedPackage.id,
-          amount: selectedPackage.price * 100, // Convert to paise
-          currency: 'INR',
-          status: 'created',
-          leads_count: selectedPackage.leads
-        })
-        .select()
-        .single();
+             // Create order in database first
+       const { data: orderData, error: orderError } = await supabase
+         .from('payment_orders')
+         .insert({
+           user_id: user.id,
+           user_email: user.email!,
+           package_id: selectedPackage.id,
+           amount: selectedPackage.price * 100, // Convert to paise
+           currency: 'INR',
+           status: 'created',
+           leads_count: selectedPackage.leads
+         })
+         .select()
+         .single();
+
+       console.log('Created order in database:', orderData);
 
       if (orderError) {
         throw new Error(`Failed to create order: ${orderError.message}`);
       }
 
-             const options = {
+             console.log('Razorpay Key:', razorpayKey.substring(0, 10) + '...');
+       console.log('Amount in paise:', selectedPackage.price * 100);
+       console.log('Order ID:', orderData.id);
+
+       const options = {
          key: razorpayKey,
          amount: selectedPackage.price * 100, // Amount in paise
          currency: 'INR',
          name: 'Tasknova Lead Generator',
          description: selectedPackage.description,
-         order_id: orderData.id, // Use our database order ID
-        handler: async (response: any) => {
-          try {
-            // Update payment status
-            await supabase
-              .from('payment_orders')
-              .update({
-                payment_id: response.razorpay_payment_id,
-                status: 'success',
-                signature: response.razorpay_signature || '',
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', orderData.id);
+         // Remove order_id - let Razorpay create order automatically
+                 handler: async (response: any) => {
+           try {
+             console.log('Payment successful:', response);
+             
+             // Update payment status with Razorpay order details
+             await supabase
+               .from('payment_orders')
+               .update({
+                 payment_id: response.razorpay_payment_id,
+                 status: 'success',
+                 signature: response.razorpay_signature || '',
+                 updated_at: new Date().toISOString()
+               })
+               .eq('id', orderData.id);
 
             toast({
               title: 'Payment Successful!',
