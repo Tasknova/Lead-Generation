@@ -24,32 +24,18 @@ interface LeadPackage {
 // Lead packages configuration
 const LEAD_PACKAGES: LeadPackage[] = [
   {
-    id: 'test',
-    name: 'Test Package',
-    leads: 1,
-    price: 10,
-    description: '₹10 test payment to verify integration'
-  },
-  {
     id: 'basic',
     name: 'Basic Package',
     leads: 100,
-    price: 99,
+    price: 20,
     description: '100 verified leads with contact information'
   },
   {
     id: 'pro',
     name: 'Pro Package',
     leads: 500,
-    price: 399,
+    price: 50,
     description: '500 verified leads with detailed information'
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise Package',
-    leads: 1000,
-    price: 699,
-    description: '1000 premium leads with full contact details'
   }
 ];
 
@@ -126,8 +112,8 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
            user_id: user.id,
            user_email: user.email!,
            package_id: selectedPackage.id,
-           amount: selectedPackage.price * 100, // Convert to paise
-           currency: 'INR',
+           amount: selectedPackage.price * 100, // Convert to cents
+           currency: 'USD',
            status: 'created',
            leads_count: selectedPackage.leads
          })
@@ -146,8 +132,8 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
 
        const options = {
          key: razorpayKey,
-         amount: selectedPackage.price * 100, // Amount in paise
-         currency: 'INR',
+         amount: selectedPackage.price * 100, // Amount in cents
+         currency: 'USD',
          name: 'Tasknova Lead Generator',
          description: selectedPackage.description,
          // Remove order_id - let Razorpay create order automatically
@@ -228,42 +214,29 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
 
         <div className="space-y-6">
           {/* Package Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {LEAD_PACKAGES.map((pkg) => (
               <Card
                 key={pkg.id}
                 className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
                   selectedPackage?.id === pkg.id
                     ? 'ring-2 ring-blue-500 bg-blue-50'
-                    : pkg.id === 'test'
-                    ? 'border-green-500 bg-green-50 hover:bg-green-100'
                     : 'hover:bg-gray-50'
                 }`}
                 onClick={() => handlePackageSelect(pkg)}
               >
                 <CardHeader className="text-center pb-3">
                   <div className="flex justify-center mb-2">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      pkg.id === 'test' ? 'bg-green-100' : 'bg-blue-100'
-                    }`}>
-                      <Users className={`h-6 w-6 ${
-                        pkg.id === 'test' ? 'text-green-600' : 'text-blue-600'
-                      }`} />
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Users className="h-6 w-6 text-blue-600" />
                     </div>
                   </div>
                   <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                  {pkg.id === 'test' && (
-                    <Badge variant="outline" className="mb-2 text-green-600 border-green-500">
-                      🧪 TEST MODE
-                    </Badge>
-                  )}
                   <CardDescription>{pkg.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="text-center pt-0">
-                  <div className={`text-3xl font-bold mb-2 ${
-                    pkg.id === 'test' ? 'text-green-600' : 'text-blue-600'
-                  }`}>
-                    ₹{pkg.price}
+                  <div className="text-3xl font-bold text-blue-600 mb-2">
+                    ${pkg.price}
                   </div>
                   <Badge variant="secondary" className="mb-3">
                     {pkg.leads} Lead{pkg.leads > 1 ? 's' : ''}
@@ -285,12 +258,12 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                     <h3 className="font-semibold text-lg">{selectedPackage.name}</h3>
                     <p className="text-gray-600">{selectedPackage.description}</p>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-blue-600">
-                      ₹{selectedPackage.price}
-                    </div>
-                    <Badge variant="outline">{selectedPackage.leads} Leads</Badge>
-                  </div>
+                                     <div className="text-right">
+                     <div className="text-2xl font-bold text-blue-600">
+                       ${selectedPackage.price}
+                     </div>
+                     <Badge variant="outline">{selectedPackage.leads} Leads</Badge>
+                   </div>
                 </div>
               </CardContent>
             </Card>
@@ -309,12 +282,12 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Processing Payment...
                 </>
-              ) : (
-                <>
-                  <CreditCard className="mr-2 h-5 w-5" />
-                  Pay ₹{selectedPackage?.price || 0}
-                </>
-              )}
+                             ) : (
+                 <>
+                   <CreditCard className="mr-2 h-5 w-5" />
+                   Pay ${selectedPackage?.price || 0}
+                 </>
+               )}
             </Button>
           </div>
 
