@@ -433,8 +433,36 @@ const HomePage: React.FC = () => {
         {/* Footer */}
         <footer className="bg-white text-gray-600 py-8">
           <div className="container mx-auto px-4">
-            <div className="text-center">
-              <p>&copy; 2025 All rights reserved.</p>
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="text-center md:text-left mb-4 md:mb-0">
+                <p>&copy; 2025 TaskNova. All rights reserved.</p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                <a 
+                  href="https://tasknova.io/privacy-policy/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                >
+                  Privacy Policy
+                </a>
+                <a 
+                  href="https://tasknova.io/terms-and-conditions/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                >
+                  Terms & Conditions
+                </a>
+                <a 
+                  href="https://tasknova.io/contact-us/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                >
+                  Contact Us
+                </a>
+              </div>
             </div>
           </div>
         </footer>
