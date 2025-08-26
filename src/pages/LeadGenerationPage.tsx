@@ -232,7 +232,29 @@ const LeadGenerationPage = () => {
   };
   
   const handleGenerateLeads = async () => {
-    await handleGenerateLeadsInternal(false);
+    // Check if user has a trial package
+    let isTrialRequest = false;
+    
+    if (user) {
+      try {
+        const { data: recentOrder } = await supabase
+          .from('payment_orders')
+          .select('is_free_request, package_id')
+          .eq('user_id', user.id)
+          .eq('status', 'success')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (recentOrder) {
+          isTrialRequest = recentOrder.is_free_request || recentOrder.package_id === 'trial';
+        }
+      } catch (error) {
+        console.log('No recent payment order found, using default settings');
+      }
+    }
+    
+    await handleGenerateLeadsInternal(isTrialRequest);
   };
 
   const handleGenerateLeadsInternal = async (freeRequestFlag: boolean) => {
@@ -297,8 +319,8 @@ const LeadGenerationPage = () => {
         user_name: fullName || user.email!,
         user_email: user.email!,
         request_type: activeMode, // 'dropdown' or 'manual'
-        is_free_request: false, // All requests are paid now
-        lead_count: 100 // Default lead count
+        is_free_request: freeRequestFlag, // Use the trial flag from payment order
+        lead_count: freeRequestFlag ? 10 : 100 // 10 leads for trial, 100 for paid
       };
 
       console.log('=== WEBHOOK DEBUG ===');

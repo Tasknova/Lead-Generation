@@ -169,7 +169,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
             currency: currency,
             status: 'created',
             leads_count: selectedPackage.leads,
-            is_free_request: isTrialPackage // Set is_free_request to true for trial package
+            is_free_request: isTrialPackage // Set is_free_request to true for trial package (₹9)
           })
           .select()
           .single();
