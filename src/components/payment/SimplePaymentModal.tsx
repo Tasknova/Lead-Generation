@@ -328,11 +328,11 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                      <CardDescription>{pkg.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="text-center pt-0">
-                    <div className={`text-3xl font-bold mb-2 ${
-                      isTrial ? 'text-green-600' : 'text-blue-600'
-                    }`}>
-                      ₹{pkg.price}
-                    </div>
+                                         <div className={`text-3xl font-bold mb-2 ${
+                       isTrial ? 'text-green-600' : 'text-blue-600'
+                     }`}>
+                                               ₹{pkg.price}
+                     </div>
                     <Badge variant="secondary" className="mb-3">
                       {pkg.leads} Lead{pkg.leads > 1 ? 's' : ''}
                     </Badge>
@@ -366,7 +366,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                   </div>
                                      <div className="text-right">
                      <div className="text-2xl font-bold text-blue-600">
-                       ₹{selectedPackage.price}
+                                               ₹{selectedPackage.price}
                      </div>
                      <Badge variant="outline">{selectedPackage.leads} Leads</Badge>
                    </div>

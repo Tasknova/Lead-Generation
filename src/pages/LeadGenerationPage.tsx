@@ -24,8 +24,7 @@ const LeadGenerationPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [fullName, setFullName] = useState<string>('');
-  const [freeLeadsUsed, setFreeLeadsUsed] = useState<boolean>(false);
-  const [isFreeRequest, setIsFreeRequest] = useState<boolean>(false);
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
@@ -40,9 +39,7 @@ const LeadGenerationPage = () => {
 
   // Dropdown options
   const jobTitleOptions = [
-    'CEO', 'CTO', 'CFO', 'COO', 'VP of Marketing', 'VP of Sales', 'VP of Engineering',
-    'VP of Business Development', 'VP of Operations', 'VP of Product', 'VP of Technology',
-    'Founder', 'Co-Founder', 'Entrepreneur', 'Startup Founder', 'Business Owner',
+    'CEO', 'CTO', 'CFO', 'COO', 'Founder', 'Co-Founder', 'Entrepreneur', 'Startup Founder', 'Business Owner',
     'Managing Director', 'Executive Director', 'Chief Marketing Officer', 'Chief Sales Officer',
     'Chief Technology Officer', 'Chief Operating Officer', 'Chief Financial Officer'
   ];
@@ -87,7 +84,7 @@ const LeadGenerationPage = () => {
           console.error('Error fetching profile:', error);
         } else if (profile) {
           setFullName(profile.full_name || '');
-          setFreeLeadsUsed(profile.free_leads_used || false);
+    
         }
       }
     };
@@ -112,67 +109,7 @@ const LeadGenerationPage = () => {
     }, 1000);
   };
 
-  const handleFreeLeadsActivation = async () => {
-    if (!user) {
-      toast({
-        title: 'Error',
-        description: 'Please log in to use free leads.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
-    if (freeLeadsUsed) {
-      toast({
-        title: 'Free Leads Already Used',
-        description: 'You have already used your 10 free leads. Please purchase leads to continue.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    try {
-      // Mark free leads as used in the database
-      const { error } = await supabase
-        .from('profiles')
-        .update({ free_leads_used: true })
-        .eq('id', user.id);
-
-      if (error) {
-        throw error;
-      }
-
-      // Update local state
-      setFreeLeadsUsed(true);
-      setIsFreeRequest(true); // Mark this as a free request
-      
-      // Set up for free leads generation - use the same input fields
-      setActiveMode('dropdown'); // Use dropdown mode for consistency
-      setJobTitles(['CEO', 'Marketing Director']); // Set some default targeting
-      setIndustries(['Technology', 'Marketing']);
-      setLocations(['United States']);
-      setSelectedCompanySize('11-50 employees');
-      setTermsAccepted(true);
-      setPaymentStatus('success');
-      
-      toast({
-        title: "Free Trial Activated!",
-        description: "Starting lead generation process...",
-      });
-      // Automatically start lead generation after free leads activation
-      setTimeout(() => {
-        // Ensure isFreeRequest is true for this call
-        handleGenerateLeadsWithFreeFlag();
-      }, 1000);
-    } catch (error) {
-      console.error('Error activating free leads:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to activate free leads. Please try again.',
-        variant: 'destructive',
-      });
-    }
-  };
 
   // Test webhook function
   const testWebhook = async () => {
@@ -294,14 +231,8 @@ const LeadGenerationPage = () => {
     return JSON.stringify(jsonData, null, 2);
   };
   
-  const handleGenerateLeadsWithFreeFlag = async () => {
-    // Force isFreeRequest to true for this call
-    const isFreeRequestFlag = true;
-    await handleGenerateLeadsInternal(isFreeRequestFlag);
-  };
-
   const handleGenerateLeads = async () => {
-    await handleGenerateLeadsInternal(isFreeRequest);
+    await handleGenerateLeadsInternal(false);
   };
 
   const handleGenerateLeadsInternal = async (freeRequestFlag: boolean) => {
@@ -342,7 +273,7 @@ const LeadGenerationPage = () => {
           user_name: fullName || user.email!,
           lead_description: jsonDescription, // Use JSON format for dropdown, plain text for manual
           status: 'running',
-          is_free_request: freeRequestFlag // Track if this is a free request
+          is_free_request: false
         })
         .select('id');
       const insertData = Array.isArray(insertDataArr) ? insertDataArr[0] : insertDataArr;
@@ -366,8 +297,8 @@ const LeadGenerationPage = () => {
         user_name: fullName || user.email!,
         user_email: user.email!,
         request_type: activeMode, // 'dropdown' or 'manual'
-        is_free_request: freeRequestFlag, // Identify free requests
-        lead_count: freeRequestFlag ? 10 : 100 // Set lead count based on request type
+        is_free_request: false, // All requests are paid now
+        lead_count: 100 // Default lead count
       };
 
       console.log('=== WEBHOOK DEBUG ===');
@@ -375,8 +306,7 @@ const LeadGenerationPage = () => {
       console.log('Webhook URL:', webhookUrl);
       console.log('User ID:', user.id);
       console.log('User Email:', user.email);
-      console.log('Free Request Flag:', freeRequestFlag);
-      console.log('Is Free Request State:', isFreeRequest);
+      console.log('Free Request Flag:', false);
 
       try {
         const response = await fetch(webhookUrl, {
@@ -417,9 +347,7 @@ const LeadGenerationPage = () => {
       console.log('Successfully recorded in Supabase and sent data to n8n webhook.');
       toast({
         title: 'Success!',
-        description: isFreeRequest 
-          ? 'Your 10 free leads request has been submitted. You will receive your leads via email within 25-30 minutes.'
-          : 'Please wait while we generate your leads. The leads will be sent to your email. It may take upto 25 to 30 mins to generate the leads',
+        description: 'Please wait while we generate your leads. The leads will be sent to your email. It may take upto 25 to 30 mins to generate the leads',
       });
       setSubmitted(true);
     } catch (error: any) {
@@ -758,20 +686,8 @@ const LeadGenerationPage = () => {
                     </label>
                   </div>
 
-                  {/* 10 Free Leads Button - Only show if user hasn't used free leads */}
-                  {!freeLeadsUsed && !isFreeRequest && (
-                    <Button 
-                      onClick={handleFreeLeadsActivation} 
-                      className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white mb-4" 
-                      disabled={!canProceedToPayment()}
-                    >
-                      <Gift className="mr-2 h-5 w-5" />
-                      Get 10 Free Leads
-                    </Button>
-                  )}
-
-                  {/* Payment Button - Only show if user has used free leads or payment is not successful */}
-                  {!isFreeRequest && paymentStatus !== 'success' && (
+                  {/* Payment Button */}
+                  {paymentStatus !== 'success' && (
                     <Button 
                       onClick={handlePayment} 
                       className="w-full h-12 text-lg font-semibold" 

@@ -136,7 +136,7 @@ const HomePage: React.FC = () => {
                 Transform your business with our lead generation platform. 
                 Find your ideal customers with precision targeting and verified contact information.
                 <span className="block mt-2 text-lg font-semibold text-green-600">
-                  🎁 Start with 10 FREE leads - No credit card required!
+                  🎁 Start with 7-day trial for just ₹9 - Limited time offer!
                 </span>
               </p>
 
@@ -147,7 +147,7 @@ const HomePage: React.FC = () => {
                   onClick={() => window.location.href = '/auth'}
                 >
                   <Gift className="mr-2 h-5 w-5" />
-                  Get 10 Free Leads
+                  Start 7-Day Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
@@ -174,7 +174,7 @@ const HomePage: React.FC = () => {
           </div>
         </section>
 
-        {/* 10 Free Leads Offer Section */}
+        {/* 7-Day Trial Offer Section */}
         <section className="py-16 bg-gradient-to-r from-green-50 to-emerald-50 border-y border-green-200">
           <div className="container mx-auto px-4">
             <motion.div
@@ -191,12 +191,12 @@ const HomePage: React.FC = () => {
                 </div>
                 
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                  🎁 Get <span className="text-green-600">10 FREE Leads</span> Today!
+                  🎁 Start Your <span className="text-green-600">7-Day Trial</span> for Just ₹9!
                 </h2>
                 
                 <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-                  Start generating high-quality leads immediately with our free trial. 
-                  No credit card required. Experience the power of AI-driven lead generation.
+                  Experience the power of AI-driven lead generation with our affordable trial. 
+                  Get 10 high-quality leads and see the difference for yourself.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
@@ -206,7 +206,7 @@ const HomePage: React.FC = () => {
                     onClick={() => window.location.href = '/auth'}
                   >
                     <Gift className="mr-2 h-5 w-5" />
-                    Claim Your 10 Free Leads
+                    Start 7-Day Trial - ₹9
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
@@ -220,11 +220,11 @@ const HomePage: React.FC = () => {
                 <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    No credit card required
+                    Only ₹9 for 7 days
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Instant access
+                    10 high-quality leads
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
