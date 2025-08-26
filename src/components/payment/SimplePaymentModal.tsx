@@ -24,24 +24,24 @@ interface LeadPackage {
 // Lead packages configuration
 const LEAD_PACKAGES: LeadPackage[] = [
   {
-    id: 'test',
-    name: 'Test Package',
-    leads: 1,
-    price: 1,
-    description: '₹1 test payment to verify integration'
+    id: 'trial',
+    name: 'Trial Package',
+    leads: 10,
+    price: 9,
+    description: '10 leads for 7 days - Limited time offer'
   },
   {
     id: 'basic',
     name: 'Basic Package',
     leads: 100,
-    price: 20,
+    price: 999,
     description: '100 verified leads with contact information'
   },
   {
     id: 'pro',
     name: 'Pro Package',
     leads: 500,
-    price: 50,
+    price: 3999,
     description: '500 verified leads with detailed information'
   }
 ];
@@ -72,7 +72,48 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
   const [selectedPackage, setSelectedPackage] = useState<LeadPackage | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const { toast } = useToast();
+
+  // Countdown timer for trial offer
+  React.useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date().getTime();
+      
+      // Get or set trial end date in localStorage
+      let trialEnd = localStorage.getItem('trialEndDate');
+      if (!trialEnd) {
+        // Set trial end to 7 days from now if not already set
+        const endDate = new Date(now + (7 * 24 * 60 * 60 * 1000)).getTime();
+        localStorage.setItem('trialEndDate', endDate.toString());
+        trialEnd = endDate.toString();
+      }
+      
+      const difference = parseInt(trialEnd) - now;
+
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((difference % (1000 * 60)) / 1000)
+        });
+      } else {
+        // If countdown has ended, show zeros
+        setTimeLeft({
+          days: 0,
+          hours: 0,
+          minutes: 0,
+          seconds: 0
+        });
+      }
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   React.useEffect(() => {
     const getUser = async () => {
@@ -113,24 +154,25 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
        }
 
              // Determine currency and amount based on package
-       const isTestPackage = selectedPackage.id === 'test';
-       const currency = isTestPackage ? 'INR' : 'USD';
-       const amount = isTestPackage ? selectedPackage.price * 100 : selectedPackage.price * 100; // paise for INR, cents for USD
+       const isTrialPackage = selectedPackage.id === 'trial';
+       const currency = 'INR'; // All packages now in INR
+       const amount = selectedPackage.price * 100; // Convert to paise
 
-       // Create order in database first
-       const { data: orderData, error: orderError } = await supabase
-         .from('payment_orders')
-         .insert({
-           user_id: user.id,
-           user_email: user.email!,
-           package_id: selectedPackage.id,
-           amount: amount,
-           currency: currency,
-           status: 'created',
-           leads_count: selectedPackage.leads
-         })
-         .select()
-         .single();
+               // Create order in database first
+        const { data: orderData, error: orderError } = await supabase
+          .from('payment_orders')
+          .insert({
+            user_id: user.id,
+            user_email: user.email!,
+            package_id: selectedPackage.id,
+            amount: amount,
+            currency: currency,
+            status: 'created',
+            leads_count: selectedPackage.leads,
+            is_free_request: isTrialPackage // Set is_free_request to true for trial package
+          })
+          .select()
+          .single();
 
        console.log('Created order in database:', orderData);
 
@@ -153,16 +195,17 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
            try {
              console.log('Payment successful:', response);
              
-             // Update payment status with Razorpay order details
-             await supabase
-               .from('payment_orders')
-               .update({
-                 payment_id: response.razorpay_payment_id,
-                 status: 'success',
-                 signature: response.razorpay_signature || '',
-                 updated_at: new Date().toISOString()
-               })
-               .eq('id', orderData.id);
+                           // Update payment status with Razorpay order details
+              await supabase
+                .from('payment_orders')
+                .update({
+                  payment_id: response.razorpay_payment_id,
+                  status: 'success',
+                  signature: response.razorpay_signature || '',
+                  updated_at: new Date().toISOString(),
+                  is_free_request: isTrialPackage // Ensure is_free_request flag is set for trial package
+                })
+                .eq('id', orderData.id);
 
             toast({
               title: 'Payment Successful!',
@@ -225,53 +268,91 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Package Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {LEAD_PACKAGES.map((pkg) => (
-              <Card
-                key={pkg.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                  selectedPackage?.id === pkg.id
-                    ? 'ring-2 ring-blue-500 bg-blue-50'
-                    : pkg.id === 'test'
-                    ? 'border-green-500 bg-green-50 hover:bg-green-100'
-                    : 'hover:bg-gray-50'
-                }`}
-                onClick={() => handlePackageSelect(pkg)}
-              >
-                <CardHeader className="text-center pb-3">
-                  <div className="flex justify-center mb-2">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      pkg.id === 'test' ? 'bg-green-100' : 'bg-blue-100'
-                    }`}>
-                      <Users className={`h-6 w-6 ${
-                        pkg.id === 'test' ? 'text-green-600' : 'text-blue-600'
-                      }`} />
+          {/* Trial Countdown */}
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-red-800 mb-2">⏰ Limited Time Trial Offer</h3>
+              <div className="flex justify-center space-x-4 text-sm">
+                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
+                  <div className="text-2xl font-bold text-red-600">{timeLeft.days}</div>
+                  <div className="text-gray-600">Days</div>
+                </div>
+                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
+                  <div className="text-2xl font-bold text-red-600">{timeLeft.hours}</div>
+                  <div className="text-gray-600">Hours</div>
+                </div>
+                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
+                  <div className="text-2xl font-bold text-red-600">{timeLeft.minutes}</div>
+                  <div className="text-gray-600">Minutes</div>
+                </div>
+                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
+                  <div className="text-2xl font-bold text-red-600">{timeLeft.seconds}</div>
+                  <div className="text-gray-600">Seconds</div>
+                </div>
+              </div>
+                             <p className="text-sm text-red-700 mt-2">Get 10 leads for just ₹9 - Offer ends soon!</p>
+            </div>
+          </div>
+
+                     {/* Package Selection */}
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+             {LEAD_PACKAGES.map((pkg) => {
+               const isTrial = pkg.id === 'trial';
+               const isComingSoon = pkg.id === 'pro';
+               
+               return (
+                 <Card
+                   key={pkg.id}
+                                       className={`transition-all duration-200 ${
+                      isComingSoon 
+                        ? 'cursor-not-allowed opacity-80 bg-gray-50 relative' 
+                        : selectedPackage?.id === pkg.id
+                        ? 'cursor-pointer ring-2 ring-blue-500 bg-blue-50'
+                        : isTrial
+                        ? 'cursor-pointer border-green-500 bg-green-50 hover:bg-green-100 hover:shadow-lg'
+                        : 'cursor-pointer hover:bg-gray-50 hover:shadow-lg'
+                    }`}
+                   onClick={() => !isComingSoon && handlePackageSelect(pkg)}
+                 >
+                  <CardHeader className="text-center pb-3">
+                    <div className="flex justify-center mb-2">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        isTrial ? 'bg-green-100' : 'bg-blue-100'
+                      }`}>
+                        <Users className={`h-6 w-6 ${
+                          isTrial ? 'text-green-600' : 'text-blue-600'
+                        }`} />
+                      </div>
                     </div>
-                  </div>
-                  <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                  {pkg.id === 'test' && (
-                    <Badge variant="outline" className="mb-2 text-green-600 border-green-500">
-                      🧪 TEST MODE
+                                         <CardTitle className="text-lg">{pkg.name}</CardTitle>
+                     <CardDescription>{pkg.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center pt-0">
+                    <div className={`text-3xl font-bold mb-2 ${
+                      isTrial ? 'text-green-600' : 'text-blue-600'
+                    }`}>
+                      ₹{pkg.price}
+                    </div>
+                    <Badge variant="secondary" className="mb-3">
+                      {pkg.leads} Lead{pkg.leads > 1 ? 's' : ''}
                     </Badge>
-                  )}
-                  <CardDescription>{pkg.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="text-center pt-0">
-                  <div className={`text-3xl font-bold mb-2 ${
-                    pkg.id === 'test' ? 'text-green-600' : 'text-blue-600'
-                  }`}>
-                    {pkg.id === 'test' ? '₹' : '$'}{pkg.price}
-                  </div>
-                  <Badge variant="secondary" className="mb-3">
-                    {pkg.leads} Lead{pkg.leads > 1 ? 's' : ''}
-                  </Badge>
-                  {selectedPackage?.id === pkg.id && (
-                    <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                                         {selectedPackage?.id === pkg.id && !isComingSoon && (
+                       <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
+                     )}
+                   </CardContent>
+                   
+                   {/* Coming Soon Overlay */}
+                   {isComingSoon && (
+                     <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center rounded-lg">
+                       <div className="text-center text-white">
+                         <div className="text-lg font-bold mb-1">🚧</div>
+                         <div className="text-sm font-semibold">Coming Soon</div>
+                       </div>
+                     </div>
+                   )}
+                 </Card>
+               );
+             })}
           </div>
 
           {/* Selected Package Summary */}
@@ -285,7 +366,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                   </div>
                                      <div className="text-right">
                      <div className="text-2xl font-bold text-blue-600">
-                       {selectedPackage.id === 'test' ? '₹' : '$'}{selectedPackage.price}
+                       ₹{selectedPackage.price}
                      </div>
                      <Badge variant="outline">{selectedPackage.leads} Leads</Badge>
                    </div>
@@ -310,7 +391,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                              ) : (
                  <>
                    <CreditCard className="mr-2 h-5 w-5" />
-                   Pay {selectedPackage?.id === 'test' ? '₹' : '$'}{selectedPackage?.price || 0}
+                   Pay ₹{selectedPackage?.price || 0}
                  </>
                )}
             </Button>

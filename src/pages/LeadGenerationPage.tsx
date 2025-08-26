@@ -41,15 +41,10 @@ const LeadGenerationPage = () => {
   // Dropdown options
   const jobTitleOptions = [
     'CEO', 'CTO', 'CFO', 'COO', 'VP of Marketing', 'VP of Sales', 'VP of Engineering',
-    'Marketing Director', 'Sales Director', 'Product Manager', 'Business Development Manager',
-    'Marketing Manager', 'Sales Manager', 'Account Executive', 'Sales Representative',
-    'Marketing Specialist', 'Growth Manager', 'Digital Marketing Manager', 'Content Manager',
-    'SEO Manager', 'PPC Manager', 'Social Media Manager', 'Brand Manager', 'Product Marketing Manager',
-    'Customer Success Manager', 'Operations Manager', 'Project Manager', 'Scrum Master',
-    'Software Engineer', 'Frontend Developer', 'Backend Developer', 'Full Stack Developer',
-    'DevOps Engineer', 'Data Scientist', 'Data Analyst', 'UX Designer', 'UI Designer',
+    'VP of Business Development', 'VP of Operations', 'VP of Product', 'VP of Technology',
     'Founder', 'Co-Founder', 'Entrepreneur', 'Startup Founder', 'Business Owner',
-    'Consultant', 'Freelancer', 'Agency Owner', 'Agency Director'
+    'Managing Director', 'Executive Director', 'Chief Marketing Officer', 'Chief Sales Officer',
+    'Chief Technology Officer', 'Chief Operating Officer', 'Chief Financial Officer'
   ];
 
   const industryOptions = [
@@ -65,13 +60,7 @@ const LeadGenerationPage = () => {
   ];
 
   const locationOptions = [
-    'United States', 'Canada', 'United Kingdom', 'Germany', 'France', 'Australia', 'India',
-    'Singapore', 'Japan', 'South Korea', 'China', 'Brazil', 'Mexico', 'Argentina', 'Chile',
-    'Colombia', 'Peru', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Switzerland',
-    'Austria', 'Belgium', 'Italy', 'Spain', 'Portugal', 'Poland', 'Czech Republic', 'Hungary',
-    'Romania', 'Bulgaria', 'Greece', 'Turkey', 'Israel', 'UAE', 'Saudi Arabia', 'South Africa',
-    'Nigeria', 'Kenya', 'Egypt', 'Morocco', 'New Zealand', 'Philippines', 'Thailand', 'Vietnam',
-    'Malaysia', 'Indonesia', 'Pakistan', 'Bangladesh', 'Sri Lanka', 'Nepal', 'Myanmar'
+    'United States', 'India', 'United Kingdom', 'Canada'
   ];
 
   const companySizeOptions = [

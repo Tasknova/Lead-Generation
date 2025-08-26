@@ -20,9 +20,9 @@ enabled = true
 site_url = "http://localhost:8081"
 additional_redirect_urls = [
   "https://tasknova-f8e6-inky.vercel.app",
-  "https://auth-flow-onboard.lovable.app/**",
-  "https://id-preview--85f4d502-ff6a-4f85-81e8-4e7d58cbdf80.lovable.app/**",
-  "https://preview--auth-flow-onboard.lovable.app/**",
+  "https://tasknova.io/**",
+  "https://*.tasknova.io/**",
+  "https://tasknova-f8e6-inky.vercel.app/**",
   "http://localhost:8000",
   "http://localhost:3000",
   "http://localhost:8080",
