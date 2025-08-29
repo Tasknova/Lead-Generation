@@ -493,13 +493,14 @@ const LeadGenerationPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <Navbar />
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isVisible ? 1 : 0 }}
-        transition={{ duration: 0.6 }}
-        className="flex flex-col min-h-screen"
-      >
-        <main className="flex-grow container mx-auto p-4 md:p-8">
+      <div className="container mx-auto px-4 md:px-8 py-8">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isVisible ? 1 : 0 }}
+          transition={{ duration: 0.6 }}
+          className="w-full"
+        >
+          <main className="w-full">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -797,8 +798,9 @@ const LeadGenerationPage = () => {
             onSuccess={handlePaymentSuccess}
           />
         </main>
-      </motion.div>
+        </motion.div>
       </div>
+    </div>
   );
 };
 
