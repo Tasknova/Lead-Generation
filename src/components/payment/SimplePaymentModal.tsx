@@ -185,7 +185,52 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                              // The phone number will be fetched from Razorpay API by the verify-payment function
                console.log('Phone number will be fetched from Razorpay API automatically');
               
-              // Update payment status with Razorpay order details
+                             // For test payments, show phone number test result instead of triggering workflow
+               if (isTestPackage) {
+                 // Wait a moment for the verify-payment function to update the phone number
+                 setTimeout(async () => {
+                   try {
+                     // Fetch the updated order to check if phone number was received
+                     const { data: updatedOrder, error: fetchError } = await supabase
+                       .from('payment_orders')
+                       .select('customer_phone, payment_id, status')
+                       .eq('id', orderData.id)
+                       .single();
+
+                     if (fetchError) {
+                       console.error('Error fetching updated order:', fetchError);
+                     }
+
+                     const phoneReceived = updatedOrder?.customer_phone;
+                     
+                     toast({
+                       title: 'Test Payment Successful! 🎉',
+                       description: phoneReceived 
+                         ? `✅ Phone number received: ${phoneReceived}`
+                         : '❌ Phone number not received from Razorpay',
+                       variant: phoneReceived ? 'default' : 'destructive',
+                     });
+
+                     console.log('Test Payment Result:', {
+                       payment_id: response.razorpay_payment_id,
+                       phone_received: phoneReceived,
+                       order_status: updatedOrder?.status
+                     });
+
+                   } catch (error) {
+                     console.error('Error checking phone number:', error);
+                     toast({
+                       title: 'Test Payment Successful!',
+                       description: 'Payment completed but could not verify phone number.',
+                     });
+                   }
+                 }, 2000); // Wait 2 seconds for verify-payment function to complete
+
+                 onClose();
+                 return;
+               }
+
+               // For non-test payments, proceed with normal workflow
                await supabase
                  .from('payment_orders')
                  .update({
@@ -197,13 +242,13 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                  })
                  .eq('id', orderData.id);
 
-            toast({
-              title: 'Payment Successful!',
-              description: `You can now generate ${selectedPackage.leads} leads.`,
-            });
+             toast({
+               title: 'Payment Successful!',
+               description: `You can now generate ${selectedPackage.leads} leads.`,
+             });
 
-            onSuccess();
-            onClose();
+             onSuccess();
+             onClose();
           } catch (error) {
             console.error('Payment update error:', error);
             toast({
