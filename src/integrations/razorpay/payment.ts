@@ -221,6 +221,8 @@ export const updatePaymentStatus = async (
   }
 };
 
+
+
 // Get user's payment history
 export const getPaymentHistory = async (userId: string) => {
   const { data, error } = await supabase

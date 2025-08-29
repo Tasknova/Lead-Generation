@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useTrialTimer } from '@/hooks/use-trial-timer';
 import { TrialCountdown } from '@/components/ui/trial-countdown';
 
+
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -81,8 +82,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
   const [selectedPackage, setSelectedPackage] = useState<LeadPackage | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [customerPhone, setCustomerPhone] = useState<string>('');
-  const [showPhoneInput, setShowPhoneInput] = useState(false);
+
   const { toast } = useToast();
   
   // Use the custom trial timer hook
@@ -100,10 +100,8 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
     setSelectedPackage(pkg);
   };
 
-  // Reset phone number when modal is closed
+  // Reset modal when closed
   const handleClose = () => {
-    setCustomerPhone('');
-    setShowPhoneInput(false);
     onClose();
   };
 
@@ -117,11 +115,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
       return;
     }
 
-    // If phone number is not collected yet, show phone input
-    if (!customerPhone.trim()) {
-      setShowPhoneInput(true);
-      return;
-    }
+
 
     setIsProcessing(true);
     try {
@@ -178,11 +172,10 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
           name: 'Tasknova Lead Generator',
           description: selectedPackage.description,
           // Remove order_id - let Razorpay create order automatically
-          prefill: {
-            name: user.user_metadata?.full_name || user.email!,
-            email: user.email!,
-            contact: '' // This will prompt user to enter phone number
-          },
+                     prefill: {
+             name: user.user_metadata?.full_name || user.email!,
+             email: user.email!
+           },
           config: {
             display: {
               blocks: {
@@ -212,21 +205,20 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
               console.log('Payment successful:', response);
               console.log('Full Razorpay response:', JSON.stringify(response, null, 2));
               
-              // Use the phone number collected from our form
-              console.log('Using collected phone number:', customerPhone);
-             
-             // Update payment status with Razorpay order details
-              await supabase
-                .from('payment_orders')
-                .update({
-                  payment_id: response.razorpay_payment_id,
-                  status: 'success',
-                  signature: response.razorpay_signature || '',
-                  customer_phone: customerPhone,
-                  updated_at: new Date().toISOString(),
-                                     is_free_request: isTrialPackage || isTestPackage // Ensure is_free_request flag is set for trial and test packages
-                })
-                .eq('id', orderData.id);
+                             // The phone number will be fetched from Razorpay API by the verify-payment function
+               console.log('Phone number will be fetched from Razorpay API automatically');
+              
+              // Update payment status with Razorpay order details
+               await supabase
+                 .from('payment_orders')
+                 .update({
+                   payment_id: response.razorpay_payment_id,
+                   status: 'success',
+                   signature: response.razorpay_signature || '',
+                   updated_at: new Date().toISOString(),
+                                      is_free_request: isTrialPackage || isTestPackage // Ensure is_free_request flag is set for trial and test packages
+                 })
+                 .eq('id', orderData.id);
 
             toast({
               title: 'Payment Successful!',
@@ -378,47 +370,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
              </Card>
            )}
 
-                     {/* Phone Number Input */}
-           {showPhoneInput && (
-             <Card className="bg-yellow-50 border-yellow-200">
-               <CardContent className="pt-6">
-                 <div className="space-y-4">
-                   <div className="text-center">
-                     <h3 className="font-semibold text-lg text-yellow-800">📞 Enter Your Phone Number</h3>
-                     <p className="text-sm text-yellow-700 mt-1">
-                       We need your phone number for payment verification and support
-                     </p>
-                   </div>
-                   <div className="flex gap-3">
-                     <input
-                       type="tel"
-                       placeholder="Enter your phone number"
-                       value={customerPhone}
-                       onChange={(e) => setCustomerPhone(e.target.value)}
-                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                     />
-                     <Button
-                       onClick={() => {
-                         if (customerPhone.trim()) {
-                           setShowPhoneInput(false);
-                           handlePayment();
-                         } else {
-                           toast({
-                             title: "Phone number required",
-                             description: "Please enter your phone number to continue.",
-                             variant: "destructive",
-                           });
-                         }
-                       }}
-                       disabled={!customerPhone.trim()}
-                     >
-                       Continue
-                     </Button>
-                   </div>
-                 </div>
-               </CardContent>
-             </Card>
-           )}
+                     
 
            {/* Payment Button */}
            <div className="flex justify-center">

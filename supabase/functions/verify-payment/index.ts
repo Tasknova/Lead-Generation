@@ -39,14 +39,40 @@ serve(async (req) => {
       )
     }
 
+    // Fetch payment details from Razorpay API to get phone number
+    let customerPhone = null;
+    try {
+      const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
+      const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+      
+      if (razorpayKeyId && razorpayKeySecret) {
+        const credentials = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
+        const response = await fetch(`https://api.razorpay.com/v1/payments/${payment_id}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const paymentDetails = await response.json();
+          customerPhone = paymentDetails.contact;
+          console.log('Phone number fetched from Razorpay:', customerPhone);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch payment details from Razorpay:', error);
+    }
+
     const { error: updateError } = await supabaseClient
       .from('payment_orders')
       .update({
         payment_id: payment_id,
         status: 'success',
         signature: signature,
+        customer_phone: customerPhone,
         updated_at: new Date().toISOString()
-        // Note: Phone number will be updated from the frontend handler
       })
       .eq('id', order_id)
 
@@ -58,7 +84,11 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ verified: true, message: 'Payment verified successfully' }),
+      JSON.stringify({ 
+        verified: true, 
+        message: 'Payment verified successfully',
+        customer_phone: customerPhone
+      }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
