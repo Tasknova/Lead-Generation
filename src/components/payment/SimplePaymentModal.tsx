@@ -176,30 +176,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
              name: user.user_metadata?.full_name || user.email!,
              email: user.email!
            },
-          config: {
-            display: {
-              blocks: {
-                banks: {
-                  name: "Pay using Bank",
-                  instruments: [
-                    {
-                      method: "card"
-                    },
-                    {
-                      method: "netbanking"
-                    },
-                    {
-                      method: "wallet"
-                    }
-                  ]
-                }
-              },
-              sequence: ["block.banks"],
-              preferences: {
-                show_default_blocks: false
-              }
-            }
-          },
+          
                   handler: async (response: any) => {
             try {
               console.log('Payment successful:', response);
