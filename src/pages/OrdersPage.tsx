@@ -377,6 +377,11 @@ const OrdersPage: React.FC = () => {
                               <Badge variant={order.status === 'success' ? 'default' : order.status === 'failed' ? 'destructive' : 'secondary'}>
                                 {order.status === 'success' ? 'Paid' : order.status === 'failed' ? 'Failed' : 'Pending'}
                               </Badge>
+                              {order.package_id === 'test' && (
+                                <Badge variant="destructive" className="text-xs">
+                                  TEST
+                                </Badge>
+                              )}
                               <span className="text-sm text-gray-500">
                                 {order.leads_count} leads
                               </span>
