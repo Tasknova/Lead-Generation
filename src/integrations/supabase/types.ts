@@ -146,6 +146,7 @@ export type Database = {
           payment_id: string | null
           signature: string | null
           leads_count: number
+          customer_phone: string | null
           created_at: string
           updated_at: string
         }
@@ -160,6 +161,7 @@ export type Database = {
           payment_id?: string | null
           signature?: string | null
           leads_count: number
+          customer_phone?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -174,6 +176,7 @@ export type Database = {
           payment_id?: string | null
           signature?: string | null
           leads_count?: number
+          customer_phone?: string | null
           created_at?: string
           updated_at?: string
         }

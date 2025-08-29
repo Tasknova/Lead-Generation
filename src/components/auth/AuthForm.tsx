@@ -25,8 +25,7 @@ const AuthForm: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    fullName: '',
-    phone: ''
+    fullName: ''
   });
 
   const validateSignupForm = () => {
@@ -34,26 +33,6 @@ const AuthForm: React.FC = () => {
       toast({
         title: "Name required",
         description: "Please enter your full name.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    if (!emailForm.phone.trim()) {
-      toast({
-        title: "Phone number required",
-        description: "Please enter your phone number.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    // Basic phone number validation (at least 10 digits)
-    const phoneRegex = /^\d{10,}$/;
-    if (!phoneRegex.test(emailForm.phone.replace(/\D/g, ''))) {
-      toast({
-        title: "Invalid phone number",
-        description: "Please enter a valid phone number with at least 10 digits.",
         variant: "destructive",
       });
       return false;
@@ -113,12 +92,10 @@ const AuthForm: React.FC = () => {
         const { data, error } = await supabase.auth.signUp({
           email: emailForm.email,
           password: emailForm.password,
-          phone: emailForm.phone,
           options: {
             emailRedirectTo: `${window.location.origin}/onboarding`,
             data: {
               full_name: emailForm.fullName,
-              phone: emailForm.phone,
               // The avatar_url will be updated after the user is created
             },
           },
@@ -270,16 +247,7 @@ const AuthForm: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={emailForm.phone}
-                      onChange={(e) => setEmailForm(prev => ({ ...prev, phone: e.target.value }))}
-                    />
-                  </div>
+                  
 
                   <div className="space-y-2">
                     <Label htmlFor="profilePicture">Profile Picture (Optional)</Label>
@@ -392,12 +360,12 @@ const AuthForm: React.FC = () => {
               <div className="text-center">
                 <Button
                   variant="link"
-                                     onClick={() => {
-                     setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
-                     setEmailForm({ email: '', password: '', confirmPassword: '', fullName: '', phone: '' });
-                     setProfilePicture(null);
-                     setProfilePicturePreview('');
-                   }}
+                                                       onClick={() => {
+                    setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+                    setEmailForm({ email: '', password: '', confirmPassword: '', fullName: '' });
+                    setProfilePicture(null);
+                    setProfilePicturePreview('');
+                  }}
                 >
                   {authMode === 'signin' 
                     ? "Don't have an account? Sign up" 

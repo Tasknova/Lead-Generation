@@ -20,6 +20,7 @@ export interface PaymentResponse {
   razorpay_payment_id: string;
   razorpay_order_id: string;
   razorpay_signature: string;
+  customer_phone?: string;
 }
 
 export interface LeadPackage {
@@ -91,7 +92,7 @@ export const createPaymentOrder = async (
       user_id: userId,
       user_email: userEmail,
       package_id: packageId,
-      amount: package_.price * 100, // Convert to paise
+      amount: package_.price * 100, // Convert to paise for Razorpay
       currency: 'INR',
       status: 'created',
       leads_count: package_.leads
@@ -195,16 +196,24 @@ export const updatePaymentStatus = async (
   orderId: string,
   paymentId: string,
   status: 'success' | 'failed',
-  signature?: string
+  signature?: string,
+  customerPhone?: string
 ): Promise<void> => {
+  const updateData: any = {
+    payment_id: paymentId,
+    status: status,
+    signature: signature,
+    updated_at: new Date().toISOString()
+  };
+
+  // Add phone number if provided
+  if (customerPhone) {
+    updateData.customer_phone = customerPhone;
+  }
+
   const { error } = await supabase
     .from('payment_orders')
-    .update({
-      payment_id: paymentId,
-      status: status,
-      signature: signature,
-      updated_at: new Date().toISOString()
-    })
+    .update(updateData)
     .eq('id', orderId);
 
   if (error) {

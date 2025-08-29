@@ -394,9 +394,14 @@ const OrdersPage: React.FC = () => {
                           <div className="text-right">
                             <div className="flex items-center gap-1 text-lg font-semibold">
                               <IndianRupee className="h-4 w-4" />
-                              {(order.amount / 100).toFixed(2)}
+                              {(order.amount / 100).toFixed(0)}
                             </div>
                             <p className="text-sm text-gray-500">{order.package_id} package</p>
+                            {order.customer_phone && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                📞 {order.customer_phone}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>

@@ -46,6 +46,7 @@ serve(async (req) => {
         status: 'success',
         signature: signature,
         updated_at: new Date().toISOString()
+        // Note: Phone number will be updated from the frontend handler
       })
       .eq('id', order_id)
 

@@ -120,7 +120,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
              // Determine currency and amount based on package
        const isTrialPackage = selectedPackage.id === 'trial';
        const currency = 'INR'; // All packages now in INR
-       const amount = selectedPackage.price * 100; // Convert to paise
+       const amount = selectedPackage.price * 100; // Convert to paise for Razorpay (₹9 = 900 paise)
 
                // Create order in database first
         const { data: orderData, error: orderError } = await supabase
@@ -159,13 +159,17 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
            try {
              console.log('Payment successful:', response);
              
-                           // Update payment status with Razorpay order details
+             // Extract phone number from Razorpay response if available
+             const customerPhone = response.razorpay_contact || null;
+             
+             // Update payment status with Razorpay order details
               await supabase
                 .from('payment_orders')
                 .update({
                   payment_id: response.razorpay_payment_id,
                   status: 'success',
                   signature: response.razorpay_signature || '',
+                  customer_phone: customerPhone,
                   updated_at: new Date().toISOString(),
                   is_free_request: isTrialPackage // Ensure is_free_request flag is set for trial package
                 })
