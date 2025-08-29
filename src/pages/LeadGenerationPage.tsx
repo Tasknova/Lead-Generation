@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { TrialCountdown } from '@/components/ui/trial-countdown';
 import { Loader2, Target, Building, MapPin, Users, Briefcase, Globe, Filter, Type, List, Zap, CheckCircle, ArrowRight, Star, TrendingUp, Users as UsersIcon, CreditCard, Gift } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -41,7 +42,8 @@ const LeadGenerationPage = () => {
   const jobTitleOptions = [
     'CEO', 'CTO', 'CFO', 'COO', 'Founder', 'Co-Founder', 'Entrepreneur', 'Startup Founder', 'Business Owner',
     'Managing Director', 'Executive Director', 'Chief Marketing Officer', 'Chief Sales Officer',
-    'Chief Technology Officer', 'Chief Operating Officer', 'Chief Financial Officer'
+    'Chief Technology Officer', 'Chief Operating Officer', 'Chief Financial Officer',
+    'Manager', 'Teacher', 'Student', 'Director', 'Consultant', 'Engineer', 'Sales', 'Product Manager'
   ];
 
   const industryOptions = [
@@ -57,7 +59,11 @@ const LeadGenerationPage = () => {
   ];
 
   const locationOptions = [
-    'United States', 'India', 'United Kingdom', 'Canada'
+    // Fixed Major Countries (as requested)
+    'India', 'United States', 'United Kingdom', 'Australia', 'United Arab Emirates', 'Canada',
+    
+    // Additional Major Markets
+    'Germany', 'Singapore', 'Japan', 'Brazil', 'France', 'Netherlands'
   ];
 
   const companySizeOptions = [
@@ -506,6 +512,12 @@ const LeadGenerationPage = () => {
             <p className="text-xl text-gray-600 mb-2">
               Generate high-quality leads for your business
             </p>
+            
+            {/* Trial Countdown */}
+            <div className="mb-6">
+              <TrialCountdown />
+            </div>
+            
             <div className="flex justify-center items-center gap-8 mt-6">
               {stats.map((stat, index) => (
                 <motion.div

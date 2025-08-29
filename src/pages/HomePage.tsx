@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
+import { TrialCountdown } from '@/components/ui/trial-countdown';
 import { 
   Target, 
   Users, 
@@ -211,7 +212,8 @@ const HomePage: React.FC = () => {
                   </Button>
                 </div>
                 
-                <div className="text-center mb-6">
+                <div className="mb-6">
+                  <TrialCountdown className="mb-4" />
                   <p className="text-sm text-orange-600 font-semibold">
                     ⏰ <span className="underline">Limited Time Offer</span> - Don't miss out!
                   </p>

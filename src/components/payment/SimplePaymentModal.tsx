@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Loader2, CreditCard, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useTrialTimer } from '@/hooks/use-trial-timer';
+import { TrialCountdown } from '@/components/ui/trial-countdown';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -72,48 +74,10 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
   const [selectedPackage, setSelectedPackage] = useState<LeadPackage | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const { toast } = useToast();
-
-  // Countdown timer for trial offer
-  React.useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date().getTime();
-      
-      // Get or set trial end date in localStorage
-      let trialEnd = localStorage.getItem('trialEndDate');
-      if (!trialEnd) {
-        // Set trial end to 7 days from now if not already set
-        const endDate = new Date(now + (7 * 24 * 60 * 60 * 1000)).getTime();
-        localStorage.setItem('trialEndDate', endDate.toString());
-        trialEnd = endDate.toString();
-      }
-      
-      const difference = parseInt(trialEnd) - now;
-
-      if (difference > 0) {
-        setTimeLeft({
-          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((difference % (1000 * 60)) / 1000)
-        });
-      } else {
-        // If countdown has ended, show zeros
-        setTimeLeft({
-          days: 0,
-          hours: 0,
-          minutes: 0,
-          seconds: 0
-        });
-      }
-    };
-
-    calculateTimeLeft();
-    const timer = setInterval(calculateTimeLeft, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
+  
+  // Use the custom trial timer hook
+  const { timeLeft, isExpired } = useTrialTimer();
 
   React.useEffect(() => {
     const getUser = async () => {
@@ -269,30 +233,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
 
         <div className="space-y-6">
           {/* Trial Countdown */}
-          <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold text-red-800 mb-2">⏰ Limited Time Trial Offer</h3>
-              <div className="flex justify-center space-x-4 text-sm">
-                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
-                  <div className="text-2xl font-bold text-red-600">{timeLeft.days}</div>
-                  <div className="text-gray-600">Days</div>
-                </div>
-                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
-                  <div className="text-2xl font-bold text-red-600">{timeLeft.hours}</div>
-                  <div className="text-gray-600">Hours</div>
-                </div>
-                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
-                  <div className="text-2xl font-bold text-red-600">{timeLeft.minutes}</div>
-                  <div className="text-gray-600">Minutes</div>
-                </div>
-                <div className="bg-white rounded-lg px-3 py-2 shadow-sm">
-                  <div className="text-2xl font-bold text-red-600">{timeLeft.seconds}</div>
-                  <div className="text-gray-600">Seconds</div>
-                </div>
-              </div>
-                             <p className="text-sm text-red-700 mt-2">Get 10 leads for just ₹9 - Offer ends soon!</p>
-            </div>
-          </div>
+          <TrialCountdown className="mb-6" />
 
                      {/* Package Selection */}
            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
