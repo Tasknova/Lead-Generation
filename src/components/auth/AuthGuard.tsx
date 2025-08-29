@@ -46,7 +46,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
       // Check if profile exists
       const { data, error } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, phone')
         .eq('id', user.id)
         .maybeSingle();
         
@@ -57,7 +57,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
           email: user.email,
           full_name: user.user_metadata?.full_name || user.user_metadata?.name || '',
           avatar_url: user.user_metadata?.avatar_url || null,
-          phone: user.phone || null
+          phone: user.phone || user.user_metadata?.phone || null
         });
         
         if (insertError) {
@@ -65,6 +65,9 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
         } else {
           console.log('Profile created successfully for user:', user.id);
         }
+      } else if (data && !data.phone) {
+        // Profile exists but no phone number - could prompt user to add phone number
+        console.log('User profile exists but no phone number found');
       }
     };
     createProfileIfNeeded();
