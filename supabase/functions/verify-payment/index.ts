@@ -16,6 +16,7 @@ serve(async (req) => {
     const { payment_id, order_id, signature, fetch_only } = body
 
 
+
     // If only payment_id is provided or fetch_only flag is set, just fetch payment details
     if ((payment_id && !order_id && !signature) || fetch_only) {
       let customerPhone = null;
