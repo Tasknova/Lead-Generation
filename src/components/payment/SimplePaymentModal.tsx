@@ -192,8 +192,14 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                 console.error('Failed to fetch phone number from Razorpay:', phoneError);
               }
               
-              // For test payments, show phone number test result
+              // For test payments, show phone number test result but still update database
               if (isTestPackage) {
+                console.log('Test Payment Result:', {
+                  payment_id: response.razorpay_payment_id,
+                  phone_received: customerPhone,
+                  order_status: 'success'
+                });
+
                 toast({
                   title: 'Test Payment Successful! 🎉',
                   description: customerPhone 
@@ -201,15 +207,6 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                     : '❌ Phone number not received from Razorpay',
                   variant: customerPhone ? 'default' : 'destructive',
                 });
-
-                console.log('Test Payment Result:', {
-                  payment_id: response.razorpay_payment_id,
-                  phone_received: customerPhone,
-                  order_status: 'success'
-                });
-
-                onClose();
-                return;
               }
 
               // For all payments, update the order with payment details and phone number
@@ -226,12 +223,24 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                 updateData.customer_phone = customerPhone;
               }
 
-              await supabase
+              console.log('🔧 Updating payment order with data:', updateData);
+              console.log('🔧 Order ID:', orderData?.id);
+              console.log('🔧 Order Data available:', !!orderData);
+              console.log('🔧 Full Order Data:', orderData);
+
+              const { data: updateResult, error: updateError } = await supabase
                 .from('payment_orders')
                 .update(updateData)
-                .eq('id', orderData.id);
+                .eq('id', orderData.id)
+                .select();
 
-              console.log('Payment order updated with phone number:', customerPhone);
+              if (updateError) {
+                console.error('❌ Database update failed:', updateError);
+                throw new Error(`Database update failed: ${updateError.message}`);
+              }
+
+              console.log('✅ Payment order updated successfully:', updateResult);
+              console.log('📱 Phone number stored in database:', customerPhone);
 
               toast({
                 title: 'Payment Successful!',
@@ -241,10 +250,17 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
               onSuccess();
               onClose();
             } catch (error) {
-              console.error('Payment update error:', error);
+              console.error('❌ Payment update error:', error);
+              console.error('❌ Error details:', {
+                message: error.message,
+                stack: error.stack,
+                orderId: orderData?.id,
+                paymentId: response?.razorpay_payment_id
+              });
+              
               toast({
                 title: 'Payment Error',
-                description: 'Payment completed but failed to update status.',
+                description: `Payment completed but failed to update status: ${error.message}`,
                 variant: 'destructive',
               });
             }
