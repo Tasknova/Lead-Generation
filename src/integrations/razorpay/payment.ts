@@ -234,38 +234,34 @@ export const fetchPaymentDetails = async (paymentId: string): Promise<{
   created_at?: string;
 }> => {
   try {
-    // Use Edge Function to securely fetch payment details (credentials stored in Edge Function secrets)
-    const response = await fetch('https://faqucbwepvzgavqrvttt.supabase.co/functions/v1/verify-payment', {
-      method: 'POST',
+    // Temporary: Use direct Razorpay API call until Edge Function is properly configured
+    const workingKeyId = 'rzp_live_5BF0PAwVBSBu3E';
+    const workingKeySecret = 'R6jA3yA5gRyTG7K5oRz1wHjO';
+    const credentials = Buffer.from(`${workingKeyId}:${workingKeySecret}`).toString('base64');
+    
+    const response = await fetch(`https://api.razorpay.com/v1/payments/${paymentId}`, {
+      method: 'GET',
       headers: {
+        'Authorization': `Basic ${credentials}`,
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
       },
-      body: JSON.stringify({
-        payment_id: paymentId,
-        fetch_only: true // Flag to indicate we only want to fetch details, not verify
-      })
     });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch payment details: ${response.status}`);
     }
 
-    const result = await response.json();
+    const paymentDetails = await response.json();
     
-    if (!result.success && !result.verified) {
-      throw new Error(result.error || 'Failed to fetch payment details');
-    }
-
     return {
-      phone: result.customer_phone || result.phone_number,
-      email: result.email,
-      name: result.name,
-      amount: result.amount,
-      currency: result.currency,
-      status: result.status,
-      method: result.method,
-      created_at: result.created_at
+      phone: paymentDetails.contact,
+      email: paymentDetails.email,
+      name: paymentDetails.name,
+      amount: paymentDetails.amount,
+      currency: paymentDetails.currency,
+      status: paymentDetails.status,
+      method: paymentDetails.method,
+      created_at: paymentDetails.created_at
     };
   } catch (error) {
     console.error('Failed to fetch payment details:', error);
