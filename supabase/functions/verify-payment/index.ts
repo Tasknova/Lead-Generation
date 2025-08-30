@@ -13,10 +13,10 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { payment_id, order_id, signature } = body
+    const { payment_id, order_id, signature, fetch_only } = body
 
-    // If only payment_id is provided, just fetch payment details
-    if (payment_id && !order_id && !signature) {
+    // If only payment_id is provided or fetch_only flag is set, just fetch payment details
+    if ((payment_id && !order_id && !signature) || fetch_only) {
       let customerPhone = null;
       let customerEmail = null;
       let customerName = null;
@@ -30,6 +30,7 @@ serve(async (req) => {
         const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
         
         if (!razorpayKeyId || !razorpayKeySecret) {
+          console.error('❌ Razorpay credentials not configured in Edge Function secrets');
           return new Response(
             JSON.stringify({ error: 'Razorpay credentials not configured' }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -39,6 +40,9 @@ serve(async (req) => {
         const credentials = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
         const apiUrl = `https://api.razorpay.com/v1/payments/${payment_id}`;
         
+        console.log('🔍 Fetching payment details for:', payment_id);
+        console.log('Using credentials:', `${razorpayKeyId.substring(0, 10)}...`);
+        
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: {
@@ -47,8 +51,14 @@ serve(async (req) => {
           },
         });
 
+        console.log('Razorpay API response status:', response.status);
+
         if (response.ok) {
           const paymentDetails = await response.json();
+          console.log('✅ Payment details fetched successfully');
+          console.log('Phone number found:', paymentDetails.contact);
+          console.log('Email found:', paymentDetails.email);
+          
           customerPhone = paymentDetails.contact;
           customerEmail = paymentDetails.email;
           customerName = paymentDetails.name;
@@ -58,8 +68,9 @@ serve(async (req) => {
           paymentCreatedAt = paymentDetails.created_at;
         } else {
           const errorText = await response.text();
+          console.error('❌ Razorpay API error:', errorText);
           return new Response(
-            JSON.stringify({ error: `Razorpay API error: ${response.status}` }),
+            JSON.stringify({ error: `Razorpay API error: ${response.status} - ${errorText}` }),
             { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           )
         }
@@ -75,7 +86,8 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true,
           payment_id: payment_id,
-          phone_number: customerPhone,
+          customer_phone: customerPhone,
+          phone_number: customerPhone, // Keep both for compatibility
           email: customerEmail,
           name: customerName,
           amount: paymentAmount,
@@ -88,7 +100,7 @@ serve(async (req) => {
       )
     }
 
-    // Original verification logic
+    // Original verification logic - only check for missing parameters if we're doing full verification
     if (!payment_id || !order_id || !signature) {
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),

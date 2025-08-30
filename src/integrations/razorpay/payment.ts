@@ -234,14 +234,16 @@ export const fetchPaymentDetails = async (paymentId: string): Promise<{
   created_at?: string;
 }> => {
   try {
-    const response = await fetch(`https://faqucbwepvzgavqrvttt.supabase.co/functions/v1/verify-payment`, {
+    // Use Edge Function to securely fetch payment details (credentials stored in Edge Function secrets)
+    const response = await fetch('https://faqucbwepvzgavqrvttt.supabase.co/functions/v1/verify-payment', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
       },
       body: JSON.stringify({
-        payment_id: paymentId
+        payment_id: paymentId,
+        fetch_only: true // Flag to indicate we only want to fetch details, not verify
       })
     });
 
@@ -251,12 +253,12 @@ export const fetchPaymentDetails = async (paymentId: string): Promise<{
 
     const result = await response.json();
     
-    if (!result.success) {
+    if (!result.success && !result.verified) {
       throw new Error(result.error || 'Failed to fetch payment details');
     }
 
     return {
-      phone: result.phone_number,
+      phone: result.customer_phone || result.phone_number,
       email: result.email,
       name: result.name,
       amount: result.amount,
@@ -285,4 +287,81 @@ export const getPaymentHistory = async (userId: string) => {
   }
 
   return data;
+};
+
+// Update existing payment orders with phone numbers from Razorpay API
+export const updateExistingPaymentsWithPhoneNumbers = async (): Promise<{
+  updated: number;
+  failed: number;
+  errors: string[];
+}> => {
+  const results = {
+    updated: 0,
+    failed: 0,
+    errors: [] as string[]
+  };
+
+  try {
+    // Get all payment orders that have payment_id but no customer_phone
+    const { data: orders, error } = await supabase
+      .from('payment_orders')
+      .select('id, payment_id, customer_phone')
+      .not('payment_id', 'is', null)
+      .or('customer_phone.is.null,customer_phone.eq.');
+
+    if (error) {
+      throw new Error(`Failed to fetch payment orders: ${error.message}`);
+    }
+
+    console.log(`Found ${orders?.length || 0} payment orders to update`);
+
+    if (!orders || orders.length === 0) {
+      return results;
+    }
+
+    // Process each order
+    for (const order of orders) {
+      try {
+        if (!order.payment_id) continue;
+
+        // Fetch payment details from Razorpay
+        const paymentDetails = await fetchPaymentDetails(order.payment_id);
+        
+        if (paymentDetails.phone) {
+          // Update the order with phone number
+          const { error: updateError } = await supabase
+            .from('payment_orders')
+            .update({ 
+              customer_phone: paymentDetails.phone,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', order.id);
+
+          if (updateError) {
+            console.error(`Failed to update order ${order.id}:`, updateError);
+            results.failed++;
+            results.errors.push(`Order ${order.id}: ${updateError.message}`);
+          } else {
+            console.log(`✅ Updated order ${order.id} with phone: ${paymentDetails.phone}`);
+            results.updated++;
+          }
+        } else {
+          console.log(`⚠️ No phone number found for payment ${order.payment_id}`);
+          results.failed++;
+          results.errors.push(`Payment ${order.payment_id}: No phone number available`);
+        }
+      } catch (orderError) {
+        console.error(`Failed to process order ${order.id}:`, orderError);
+        results.failed++;
+        results.errors.push(`Order ${order.id}: ${orderError instanceof Error ? orderError.message : 'Unknown error'}`);
+      }
+    }
+
+    console.log(`Update complete: ${results.updated} updated, ${results.failed} failed`);
+    return results;
+
+  } catch (error) {
+    console.error('Failed to update existing payments:', error);
+    throw error;
+  }
 };

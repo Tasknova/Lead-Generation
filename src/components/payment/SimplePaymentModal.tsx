@@ -172,133 +172,97 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
           name: 'Tasknova Lead Generator',
           description: selectedPackage.description,
           // Remove order_id - let Razorpay create order automatically
-                     prefill: {
-             name: user.user_metadata?.full_name || user.email!,
-             email: user.email!
-           },
-          
-                  handler: async (response: any) => {
+          prefill: {
+            name: user.user_metadata?.full_name || user.email!,
+            email: user.email!
+          },
+          handler: async (response: any) => {
             try {
               console.log('Payment successful:', response);
               console.log('Full Razorpay response:', JSON.stringify(response, null, 2));
               
-                             // The phone number will be fetched from Razorpay API by the verify-payment function
-               console.log('Phone number will be fetched from Razorpay API automatically');
+              // Fetch phone number from Razorpay API for all payments
+              let customerPhone = null;
+              try {
+                const { fetchPaymentDetails } = await import('@/integrations/razorpay/payment');
+                const paymentDetails = await fetchPaymentDetails(response.razorpay_payment_id);
+                customerPhone = paymentDetails.phone;
+                console.log('📱 Phone number fetched from Razorpay:', customerPhone);
+              } catch (phoneError) {
+                console.error('Failed to fetch phone number from Razorpay:', phoneError);
+              }
               
-                             // For test payments, show phone number test result instead of triggering workflow
-               if (isTestPackage) {
-                 // Call verify-payment function directly to ensure phone number is fetched
-                 try {
-                   const verifyResponse = await fetch('https://faqucbwepvzgavqrvttt.supabase.co/functions/v1/verify-payment', {
-                     method: 'POST',
-                     headers: {
-                       'Content-Type': 'application/json',
-                       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
-                     },
-                     body: JSON.stringify({
-                       payment_id: response.razorpay_payment_id,
-                       order_id: orderData.id,
-                       signature: response.razorpay_signature
-                     })
-                   });
+              // For test payments, show phone number test result
+              if (isTestPackage) {
+                toast({
+                  title: 'Test Payment Successful! 🎉',
+                  description: customerPhone 
+                    ? `✅ Phone number received: ${customerPhone}`
+                    : '❌ Phone number not received from Razorpay',
+                  variant: customerPhone ? 'default' : 'destructive',
+                });
 
-                   console.log('Verify-payment response status:', verifyResponse.status);
-                   const verifyResult = await verifyResponse.json();
-                   console.log('Verify-payment result:', verifyResult);
-                 } catch (verifyError) {
-                   console.error('Error calling verify-payment:', verifyError);
-                 }
+                console.log('Test Payment Result:', {
+                  payment_id: response.razorpay_payment_id,
+                  phone_received: customerPhone,
+                  order_status: 'success'
+                });
 
-                 // Wait a moment for the verify-payment function to update the phone number
-                 setTimeout(async () => {
-                   try {
-                     // Fetch the updated order to check if phone number was received
-                     const { data: updatedOrder, error: fetchError } = await supabase
-                       .from('payment_orders')
-                       .select('customer_phone, payment_id, status')
-                       .eq('id', orderData.id)
-                       .single();
+                onClose();
+                return;
+              }
 
-                     if (fetchError) {
-                       console.error('Error fetching updated order:', fetchError);
-                     }
+              // For all payments, update the order with payment details and phone number
+              const updateData: any = {
+                payment_id: response.razorpay_payment_id,
+                status: 'success',
+                signature: response.razorpay_signature || '',
+                updated_at: new Date().toISOString(),
+                is_free_request: isTrialPackage || isTestPackage
+              };
 
-                     const phoneReceived = updatedOrder?.customer_phone;
-                     
-                     toast({
-                       title: 'Test Payment Successful! 🎉',
-                       description: phoneReceived 
-                         ? `✅ Phone number received: ${phoneReceived}`
-                         : '❌ Phone number not received from Razorpay',
-                       variant: phoneReceived ? 'default' : 'destructive',
-                     });
+              // Add phone number if available
+              if (customerPhone) {
+                updateData.customer_phone = customerPhone;
+              }
 
-                                           console.log('Test Payment Result:', {
-                        payment_id: response.razorpay_payment_id,
-                        phone_received: phoneReceived,
-                        order_status: updatedOrder?.status,
-                        full_order: updatedOrder
-                      });
+              await supabase
+                .from('payment_orders')
+                .update(updateData)
+                .eq('id', orderData.id);
 
-                   } catch (error) {
-                     console.error('Error checking phone number:', error);
-                     toast({
-                       title: 'Test Payment Successful!',
-                       description: 'Payment completed but could not verify phone number.',
-                     });
-                   }
-                 }, 2000); // Wait 2 seconds for verify-payment function to complete
+              console.log('Payment order updated with phone number:', customerPhone);
 
-                 onClose();
-                 return;
-               }
+              toast({
+                title: 'Payment Successful!',
+                description: `You can now generate ${selectedPackage.leads} leads.${customerPhone ? ` Phone: ${customerPhone}` : ''}`,
+              });
 
-               // For non-test payments, proceed with normal workflow
-               await supabase
-                 .from('payment_orders')
-                 .update({
-                   payment_id: response.razorpay_payment_id,
-                   status: 'success',
-                   signature: response.razorpay_signature || '',
-                   updated_at: new Date().toISOString(),
-                                      is_free_request: isTrialPackage || isTestPackage // Ensure is_free_request flag is set for trial and test packages
-                 })
-                 .eq('id', orderData.id);
-
-             toast({
-               title: 'Payment Successful!',
-               description: `You can now generate ${selectedPackage.leads} leads.`,
-             });
-
-             onSuccess();
-             onClose();
-          } catch (error) {
-            console.error('Payment update error:', error);
-            toast({
-              title: 'Payment Error',
-              description: 'Payment completed but failed to update status.',
-              variant: 'destructive',
-            });
+              onSuccess();
+              onClose();
+            } catch (error) {
+              console.error('Payment update error:', error);
+              toast({
+                title: 'Payment Error',
+                description: 'Payment completed but failed to update status.',
+                variant: 'destructive',
+              });
+            }
+          },
+          theme: {
+            color: '#3B82F6'
+          },
+          modal: {
+            ondismiss: () => {
+              toast({
+                title: 'Payment Cancelled',
+                description: 'Payment was cancelled by user.',
+                variant: 'destructive',
+              });
+              setIsProcessing(false);
+            }
           }
-        },
-        prefill: {
-          name: user.user_metadata?.full_name || user.email!,
-          email: user.email!
-        },
-        theme: {
-          color: '#3B82F6'
-        },
-        modal: {
-          ondismiss: () => {
-            toast({
-              title: 'Payment Cancelled',
-              description: 'Payment was cancelled by user.',
-              variant: 'destructive',
-            });
-            setIsProcessing(false);
-          }
-        }
-      };
+        };
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();

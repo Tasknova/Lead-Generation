@@ -18,7 +18,7 @@ interface PaymentDetails {
 }
 
 export default function PaymentTestPage() {
-  const [paymentId, setPaymentId] = useState('pay_RB7E7ybb9hlfVO'); // Random payment ID from database
+  const [paymentId, setPaymentId] = useState('pay_RA0FBTmBR2LqjR'); // Payment ID that has phone number
   const [paymentDetails, setPaymentDetails] = useState<PaymentDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -26,9 +26,9 @@ export default function PaymentTestPage() {
   const handleFetchPaymentDetails = async () => {
     if (!paymentId.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a payment ID",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Please enter a payment ID',
+        variant: 'destructive',
       });
       return;
     }
@@ -37,16 +37,20 @@ export default function PaymentTestPage() {
     try {
       const details = await fetchPaymentDetails(paymentId);
       setPaymentDetails(details);
+      
       toast({
-        title: "Success",
-        description: "Payment details fetched successfully",
+        title: 'Success!',
+        description: details.phone 
+          ? `Phone number found: ${details.phone}`
+          : 'No phone number found for this payment',
+        variant: details.phone ? 'default' : 'destructive',
       });
     } catch (error) {
-      console.error('Failed to fetch payment details:', error);
+      console.error('Error fetching payment details:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to fetch payment details",
-        variant: "destructive",
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to fetch payment details',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -57,28 +61,27 @@ export default function PaymentTestPage() {
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Fetch Payment Details</CardTitle>
+          <CardTitle>Test Razorpay Payment Details</CardTitle>
           <CardDescription>
-            Enter a Razorpay payment ID to fetch customer details including phone number and email
+            Test the direct Razorpay API integration to fetch phone numbers and other payment details.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="payment-id">Payment ID</Label>
+            <Label htmlFor="paymentId">Payment ID</Label>
             <Input
-              id="payment-id"
+              id="paymentId"
               value={paymentId}
               onChange={(e) => setPaymentId(e.target.value)}
               placeholder="Enter Razorpay payment ID"
             />
           </div>
-          
           <Button 
             onClick={handleFetchPaymentDetails} 
             disabled={loading}
             className="w-full"
           >
-            {loading ? "Fetching..." : "Fetch Payment Details"}
+            {loading ? 'Fetching...' : 'Fetch Payment Details'}
           </Button>
         </CardContent>
       </Card>
@@ -88,45 +91,45 @@ export default function PaymentTestPage() {
           <CardHeader>
             <CardTitle>Payment Details</CardTitle>
             <CardDescription>
-              Customer information from Razorpay
+              Details fetched from Razorpay API
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium text-gray-500">Phone Number</Label>
                 <p className="text-lg font-semibold">
-                  {paymentDetails.phone || "Not provided"}
+                  {paymentDetails.phone || 'Not provided'}
                 </p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-500">Email</Label>
                 <p className="text-lg font-semibold">
-                  {paymentDetails.email || "Not provided"}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-500">Name</Label>
-                <p className="text-lg font-semibold">
-                  {paymentDetails.name || "Not provided"}
+                  {paymentDetails.email || 'Not provided'}
                 </p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-500">Amount</Label>
                 <p className="text-lg font-semibold">
-                  {paymentDetails.amount ? `${paymentDetails.amount / 100} ${paymentDetails.currency}` : "Not available"}
+                  {paymentDetails.amount ? `₹${(paymentDetails.amount / 100).toFixed(2)}` : 'Not available'}
                 </p>
               </div>
               <div>
                 <Label className="text-sm font-medium text-gray-500">Status</Label>
                 <p className="text-lg font-semibold">
-                  {paymentDetails.status || "Not available"}
+                  {paymentDetails.status || 'Not available'}
                 </p>
               </div>
               <div>
-                <Label className="text-sm font-medium text-gray-500">Payment Method</Label>
+                <Label className="text-sm font-medium text-gray-500">Method</Label>
                 <p className="text-lg font-semibold">
-                  {paymentDetails.method || "Not available"}
+                  {paymentDetails.method || 'Not available'}
+                </p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-500">Currency</Label>
+                <p className="text-lg font-semibold">
+                  {paymentDetails.currency || 'Not available'}
                 </p>
               </div>
             </div>
