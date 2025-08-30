@@ -10,6 +10,7 @@ import HomePage from './pages/HomePage';
 import LeadGenerationPage from './pages/LeadGenerationPage';
 import OrdersPage from './pages/OrdersPage';
 import LeadDataPage from './pages/LeadDataPage';
+import PaymentTestPage from './pages/PaymentTestPage';
 
 function App() {
   return (
@@ -59,6 +60,15 @@ function App() {
             element={
               <AuthGuard>
                 <LeadDataPage />
+              </AuthGuard>
+            }
+          />
+
+          <Route 
+            path="/payment-test"
+            element={
+              <AuthGuard>
+                <PaymentTestPage />
               </AuthGuard>
             }
           />

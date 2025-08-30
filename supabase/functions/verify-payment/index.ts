@@ -12,19 +12,94 @@ serve(async (req) => {
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const body = await req.json()
+    const { payment_id, order_id, signature } = body
 
-    const { payment_id, order_id, signature } = await req.json()
+    // If only payment_id is provided, just fetch payment details
+    if (payment_id && !order_id && !signature) {
+      let customerPhone = null;
+      let customerEmail = null;
+      let customerName = null;
+      let paymentAmount = null;
+      let paymentStatus = null;
+      let paymentMethod = null;
+      let paymentCreatedAt = null;
 
+      try {
+        const razorpayKeyId = Deno.env.get('RAZORPAY_KEY_ID');
+        const razorpayKeySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+        
+        if (!razorpayKeyId || !razorpayKeySecret) {
+          return new Response(
+            JSON.stringify({ error: 'Razorpay credentials not configured' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        const credentials = btoa(`${razorpayKeyId}:${razorpayKeySecret}`);
+        const apiUrl = `https://api.razorpay.com/v1/payments/${payment_id}`;
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Basic ${credentials}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const paymentDetails = await response.json();
+          customerPhone = paymentDetails.contact;
+          customerEmail = paymentDetails.email;
+          customerName = paymentDetails.name;
+          paymentAmount = paymentDetails.amount;
+          paymentStatus = paymentDetails.status;
+          paymentMethod = paymentDetails.method;
+          paymentCreatedAt = paymentDetails.created_at;
+        } else {
+          const errorText = await response.text();
+          return new Response(
+            JSON.stringify({ error: `Razorpay API error: ${response.status}` }),
+            { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+      } catch (error) {
+        console.error('Failed to fetch payment details from Razorpay:', error);
+        return new Response(
+          JSON.stringify({ error: 'Failed to fetch payment details' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          payment_id: payment_id,
+          phone_number: customerPhone,
+          email: customerEmail,
+          name: customerName,
+          amount: paymentAmount,
+          currency: 'INR',
+          status: paymentStatus,
+          method: paymentMethod,
+          created_at: paymentCreatedAt
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Original verification logic
     if (!payment_id || !order_id || !signature) {
       return new Response(
         JSON.stringify({ error: 'Missing required parameters' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
     const { data: order, error: orderError } = await supabaseClient
       .from('payment_orders')
@@ -51,10 +126,9 @@ serve(async (req) => {
           method: 'GET',
           headers: {
             'Authorization': `Basic ${credentials}`,
-            'Content-Type': 'application/json',
-          },
+            'Content-Type': 'application/json'
+          }
         });
-
         if (response.ok) {
           const paymentDetails = await response.json();
           customerPhone = paymentDetails.contact;

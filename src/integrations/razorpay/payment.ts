@@ -222,6 +222,55 @@ export const updatePaymentStatus = async (
 };
 
 
+// Fetch payment details from Razorpay API
+export const fetchPaymentDetails = async (paymentId: string): Promise<{
+  phone?: string;
+  email?: string;
+  name?: string;
+  amount?: number;
+  currency?: string;
+  status?: string;
+  method?: string;
+  created_at?: string;
+}> => {
+  try {
+    const response = await fetch(`https://faqucbwepvzgavqrvttt.supabase.co/functions/v1/verify-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+      },
+      body: JSON.stringify({
+        payment_id: paymentId
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch payment details: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to fetch payment details');
+    }
+
+    return {
+      phone: result.phone_number,
+      email: result.email,
+      name: result.name,
+      amount: result.amount,
+      currency: result.currency,
+      status: result.status,
+      method: result.method,
+      created_at: result.created_at
+    };
+  } catch (error) {
+    console.error('Failed to fetch payment details:', error);
+    throw error;
+  }
+};
+
 
 // Get user's payment history
 export const getPaymentHistory = async (userId: string) => {

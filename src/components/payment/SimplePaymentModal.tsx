@@ -187,6 +187,28 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
               
                              // For test payments, show phone number test result instead of triggering workflow
                if (isTestPackage) {
+                 // Call verify-payment function directly to ensure phone number is fetched
+                 try {
+                   const verifyResponse = await fetch('https://faqucbwepvzgavqrvttt.supabase.co/functions/v1/verify-payment', {
+                     method: 'POST',
+                     headers: {
+                       'Content-Type': 'application/json',
+                       'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+                     },
+                     body: JSON.stringify({
+                       payment_id: response.razorpay_payment_id,
+                       order_id: orderData.id,
+                       signature: response.razorpay_signature
+                     })
+                   });
+
+                   console.log('Verify-payment response status:', verifyResponse.status);
+                   const verifyResult = await verifyResponse.json();
+                   console.log('Verify-payment result:', verifyResult);
+                 } catch (verifyError) {
+                   console.error('Error calling verify-payment:', verifyError);
+                 }
+
                  // Wait a moment for the verify-payment function to update the phone number
                  setTimeout(async () => {
                    try {
@@ -211,11 +233,12 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                        variant: phoneReceived ? 'default' : 'destructive',
                      });
 
-                     console.log('Test Payment Result:', {
-                       payment_id: response.razorpay_payment_id,
-                       phone_received: phoneReceived,
-                       order_status: updatedOrder?.status
-                     });
+                                           console.log('Test Payment Result:', {
+                        payment_id: response.razorpay_payment_id,
+                        phone_received: phoneReceived,
+                        order_status: updatedOrder?.status,
+                        full_order: updatedOrder
+                      });
 
                    } catch (error) {
                      console.error('Error checking phone number:', error);
