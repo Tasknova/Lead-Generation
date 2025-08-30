@@ -237,7 +237,7 @@ export const fetchPaymentDetails = async (paymentId: string): Promise<{
     // Temporary: Use direct Razorpay API call until Edge Function is properly configured
     const workingKeyId = 'rzp_live_5BF0PAwVBSBu3E';
     const workingKeySecret = 'R6jA3yA5gRyTG7K5oRz1wHjO';
-    const credentials = Buffer.from(`${workingKeyId}:${workingKeySecret}`).toString('base64');
+    const credentials = btoa(`${workingKeyId}:${workingKeySecret}`); // Use btoa instead of Buffer
     
     const response = await fetch(`https://api.razorpay.com/v1/payments/${paymentId}`, {
       method: 'GET',
