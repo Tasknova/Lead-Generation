@@ -27,13 +27,6 @@ interface LeadPackage {
 // Lead packages configuration
 const LEAD_PACKAGES: LeadPackage[] = [
   {
-    id: 'test',
-    name: 'Test Payment',
-    leads: 1,
-    price: 1,
-    description: '1 rupee test payment for testing purposes'
-  },
-  {
     id: 'trial',
     name: 'Trial Package',
     leads: 10,
@@ -133,9 +126,8 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
          throw new Error('Razorpay Key ID is not configured. Add VITE_RAZORPAY_KEY_ID to your .env file');
        }
 
-                     // Determine currency and amount based on package
-        const isTestPackage = selectedPackage.id === 'test';
-        const isTrialPackage = selectedPackage.id === 'trial';
+                             // Determine currency and amount based on package
+         const isTrialPackage = selectedPackage.id === 'trial';
         const currency = 'INR'; // All packages now in INR
         const amount = selectedPackage.price * 100; // Convert to paise for Razorpay (₹1 = 100 paise)
 
@@ -150,7 +142,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
             currency: currency,
             status: 'created',
                          leads_count: selectedPackage.leads,
-             is_free_request: isTrialPackage || isTestPackage // Set is_free_request to true for trial and test packages
+             is_free_request: isTrialPackage // Set is_free_request to true for trial packages
           })
           .select()
           .single();
@@ -192,22 +184,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                 console.error('Failed to fetch phone number from Razorpay:', phoneError);
               }
               
-              // For test payments, show phone number test result but still update database
-              if (isTestPackage) {
-                console.log('Test Payment Result:', {
-                  payment_id: response.razorpay_payment_id,
-                  phone_received: customerPhone,
-                  order_status: 'success'
-                });
-
-                toast({
-                  title: 'Test Payment Successful! 🎉',
-                  description: customerPhone 
-                    ? `✅ Phone number received: ${customerPhone}`
-                    : '❌ Phone number not received from Razorpay',
-                  variant: customerPhone ? 'default' : 'destructive',
-                });
-              }
+              
 
               // For all payments, update the order with payment details and phone number
               const updateData: any = {
@@ -215,7 +192,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                 status: 'success',
                 signature: response.razorpay_signature || '',
                 updated_at: new Date().toISOString(),
-                is_free_request: isTrialPackage || isTestPackage
+                                 is_free_request: isTrialPackage
               };
 
               // Add phone number if available
@@ -310,50 +287,47 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
           <TrialCountdown className="mb-6" />
 
                      {/* Package Selection */}
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                           {LEAD_PACKAGES.map((pkg) => {
-                const isTest = pkg.id === 'test';
-                const isTrial = pkg.id === 'trial';
-                const isComingSoon = pkg.id === 'pro';
+                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {LEAD_PACKAGES.map((pkg) => {
+                 const isTrial = pkg.id === 'trial';
+                 const isComingSoon = pkg.id === 'pro';
                
                return (
-                                   <Card
-                    key={pkg.id}
-                                        className={`transition-all duration-200 ${
-                       isComingSoon 
-                         ? 'cursor-not-allowed opacity-80 bg-gray-50 relative' 
-                         : selectedPackage?.id === pkg.id
-                         ? 'cursor-pointer ring-2 ring-blue-500 bg-blue-50'
-                         : isTest
-                         ? 'cursor-pointer border-orange-500 bg-orange-50 hover:bg-orange-100 hover:shadow-lg'
-                         : isTrial
-                         ? 'cursor-pointer border-green-500 bg-green-50 hover:bg-green-100 hover:shadow-lg'
-                         : 'cursor-pointer hover:bg-gray-50 hover:shadow-lg'
-                     }`}
-                    onClick={() => !isComingSoon && handlePackageSelect(pkg)}
-                  >
-                  <CardHeader className="text-center pb-3">
-                                         <div className="flex justify-center mb-2">
-                       <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                         isTest ? 'bg-orange-100' : isTrial ? 'bg-green-100' : 'bg-blue-100'
-                       }`}>
-                         <Users className={`h-6 w-6 ${
-                           isTest ? 'text-orange-600' : isTrial ? 'text-green-600' : 'text-blue-600'
-                         }`} />
-                       </div>
-                     </div>
-                                         <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                     <CardDescription>{pkg.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="text-center pt-0">
-                                                              <div className={`text-3xl font-bold mb-2 ${
-                        isTest ? 'text-orange-600' : isTrial ? 'text-green-600' : 'text-blue-600'
-                      }`}>
-                                                ₹{pkg.price}
+                                                                       <Card
+                     key={pkg.id}
+                                         className={`transition-all duration-200 ${
+                        isComingSoon 
+                          ? 'cursor-not-allowed opacity-80 bg-gray-50 relative' 
+                          : selectedPackage?.id === pkg.id
+                          ? 'cursor-pointer ring-2 ring-blue-500 bg-blue-50'
+                          : isTrial
+                          ? 'cursor-pointer border-green-500 bg-green-50 hover:bg-green-100 hover:shadow-lg'
+                          : 'cursor-pointer hover:bg-gray-50 hover:shadow-lg'
+                      }`}
+                     onClick={() => !isComingSoon && handlePackageSelect(pkg)}
+                   >
+                                     <CardHeader className="text-center pb-3">
+                                          <div className="flex justify-center mb-2">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                          isTrial ? 'bg-green-100' : 'bg-blue-100'
+                        }`}>
+                          <Users className={`h-6 w-6 ${
+                            isTrial ? 'text-green-600' : 'text-blue-600'
+                          }`} />
+                        </div>
                       </div>
-                                         <Badge variant={isTest ? "destructive" : "secondary"} className="mb-3">
-                       {isTest ? "TEST" : `${pkg.leads} Lead${pkg.leads > 1 ? 's' : ''}`}
-                     </Badge>
+                                          <CardTitle className="text-lg">{pkg.name}</CardTitle>
+                      <CardDescription>{pkg.description}</CardDescription>
+                   </CardHeader>
+                   <CardContent className="text-center pt-0">
+                                                               <div className={`text-3xl font-bold mb-2 ${
+                         isTrial ? 'text-green-600' : 'text-blue-600'
+                       }`}>
+                                                 ₹{pkg.price}
+                       </div>
+                                          <Badge variant="secondary" className="mb-3">
+                        {`${pkg.leads} Lead${pkg.leads > 1 ? 's' : ''}`}
+                      </Badge>
                                          {selectedPackage?.id === pkg.id && !isComingSoon && (
                        <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
                      )}
@@ -373,27 +347,27 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
              })}
           </div>
 
-                     {/* Selected Package Summary */}
-           {selectedPackage && (
-             <Card className={`${selectedPackage.id === 'test' ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
-               <CardContent className="pt-6">
-                 <div className="flex items-center justify-between">
-                   <div>
-                     <h3 className="font-semibold text-lg">{selectedPackage.name}</h3>
-                     <p className="text-gray-600">{selectedPackage.description}</p>
-                   </div>
-                                      <div className="text-right">
-                      <div className={`text-2xl font-bold ${selectedPackage.id === 'test' ? 'text-orange-600' : 'text-blue-600'}`}>
-                                                ₹{selectedPackage.price}
-                      </div>
-                      <Badge variant={selectedPackage.id === 'test' ? "destructive" : "outline"}>
-                        {selectedPackage.id === 'test' ? "TEST" : `${selectedPackage.leads} Leads`}
-                      </Badge>
+                                 {/* Selected Package Summary */}
+            {selectedPackage && (
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-lg">{selectedPackage.name}</h3>
+                      <p className="text-gray-600">{selectedPackage.description}</p>
                     </div>
-                 </div>
-               </CardContent>
-             </Card>
-           )}
+                                       <div className="text-right">
+                       <div className="text-2xl font-bold text-blue-600">
+                                                 ₹{selectedPackage.price}
+                       </div>
+                       <Badge variant="outline">
+                         {`${selectedPackage.leads} Leads`}
+                       </Badge>
+                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
                      
 
