@@ -150,7 +150,9 @@ export const initializePayment = async (
       },
       modal: {
         ondismiss: onFailure
-      }
+      },
+      // Ensure Razorpay modal has highest z-index
+      z_index: 999999
     };
 
     console.log('Razorpay Options:', { ...options, key: '***' }); // Log for debugging

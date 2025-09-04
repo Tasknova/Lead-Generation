@@ -254,9 +254,14 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
               });
               setIsProcessing(false);
             }
-          }
+          },
+          // Ensure Razorpay modal has highest z-index
+          z_index: 999999
         };
 
+      // Close the payment modal before opening Razorpay to avoid z-index conflicts
+      onClose();
+      
       const razorpay = new window.Razorpay(options);
       razorpay.open();
     } catch (error) {

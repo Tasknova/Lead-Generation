@@ -101,3 +101,21 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Ensure Razorpay modal appears above all other elements */
+.razorpay-checkout-frame {
+  z-index: 999999 !important;
+}
+
+.razorpay-checkout-frame iframe {
+  z-index: 999999 !important;
+}
+
+/* Additional Razorpay modal z-index fixes */
+[data-razorpay-checkout] {
+  z-index: 999999 !important;
+}
+
+.razorpay-checkout {
+  z-index: 999999 !important;
+}
