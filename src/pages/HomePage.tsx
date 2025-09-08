@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { TrialCountdown } from '@/components/ui/trial-countdown';
 import { 
   Target, 
   Users, 
@@ -137,7 +136,7 @@ const HomePage: React.FC = () => {
                 Transform your business with our lead generation platform. 
                 Find your ideal customers with precision targeting and verified contact information.
                 <span className="block mt-2 text-lg font-semibold text-green-600">
-                  🎁 Start with 7-day trial for just ₹9 - Limited time offer!
+                  🎁 Get 10 free leads when you sign up - No payment required!
                 </span>
               </p>
 
@@ -148,7 +147,7 @@ const HomePage: React.FC = () => {
                   onClick={() => window.location.href = '/auth'}
                 >
                   <Gift className="mr-2 h-5 w-5" />
-                  Start 7-Day Trial
+                  Get 10 Free Leads
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
@@ -175,7 +174,7 @@ const HomePage: React.FC = () => {
           </div>
         </section>
 
-        {/* 7-Day Trial Offer Section */}
+        {/* Free Leads Offer Section */}
         <section className="py-16 bg-gradient-to-r from-green-50 to-emerald-50 border-y border-green-200">
           <div className="container mx-auto px-4">
             <motion.div
@@ -192,12 +191,12 @@ const HomePage: React.FC = () => {
                 </div>
                 
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                  🎁 Start Your <span className="text-green-600">7-Day Trial</span> for Just ₹9!
+                  🎁 Get <span className="text-green-600">10 Free Leads</span> When You Sign Up!
                 </h2>
                 
                 <p className="text-lg text-gray-600 mb-6 max-w-2xl mx-auto">
-                  Experience the power of AI-driven lead generation with our affordable trial. 
-                  Get 10 high-quality leads and see the difference for yourself.
+                  Experience the power of AI-driven lead generation completely free. 
+                  Get 10 high-quality leads with no payment required - perfect for testing our platform.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
@@ -207,22 +206,21 @@ const HomePage: React.FC = () => {
                     onClick={() => window.location.href = '/auth'}
                   >
                     <Gift className="mr-2 h-5 w-5" />
-                    Start 7-Day Trial - ₹9
+                    Get 10 Free Leads
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </div>
                 
                 <div className="mb-6">
-                  <TrialCountdown className="mb-4" />
-                  <p className="text-sm text-orange-600 font-semibold">
-                    ⏰ <span className="underline">Limited Time Offer</span> - Don't miss out!
+                  <p className="text-sm text-green-600 font-semibold">
+                    ✨ <span className="underline">One-time offer</span> - Available for all new users!
                   </p>
                 </div>
                 
                 <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Only ₹9 for 7 days
+                    Completely free
                   </div>
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
@@ -231,6 +229,10 @@ const HomePage: React.FC = () => {
                   <div className="flex items-center">
                     <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
                     Export in CSV/JSON
+                  </div>
+                  <div className="flex items-center">
+                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+                    No credit card required
                   </div>
                 </div>
               </div>
@@ -413,7 +415,7 @@ const HomePage: React.FC = () => {
                 Ready to Scale Your Business?
               </h2>
               <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-                Start generating qualified leads today. 
+                Start generating qualified leads today with 10 free leads. 
                 Join thousands of successful businesses.
               </p>
               
@@ -423,8 +425,8 @@ const HomePage: React.FC = () => {
                   className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
                   onClick={() => window.location.href = '/auth'}
                 >
-                  <Target className="mr-2 h-5 w-5" />
-                  Start Generating Leads
+                  <Gift className="mr-2 h-5 w-5" />
+                  Get 10 Free Leads
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
