@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, Lock, Unlock } from 'lucide-react';
+import { Loader2, Lock, Unlock, Building2, User, Linkedin, Globe, Phone, CheckCircle } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -12,6 +12,20 @@ import { Label } from '@/components/ui/label';
 import Navbar, { ProfileContext } from '@/components/ui/navbar';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
+
+interface BusinessProfile {
+  id: string;
+  user_id: string;
+  business_name: string;
+  position: string;
+  linkedin_url?: string | null;
+  website_url?: string | null;
+  industry: string;
+  phone: string;
+  phone_verified: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -30,6 +44,7 @@ const ProfilePage: React.FC = () => {
   const [editLoading, setEditLoading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState('');
+  const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -58,6 +73,19 @@ const ProfilePage: React.FC = () => {
         setProfile(data);
         setAvatarUrl(data?.avatar_url || null);
         setFullName(data?.full_name || '');
+
+        // Fetch business profile
+        const { data: businessData, error: businessError } = await supabase
+          .from('business_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (businessError) {
+          console.error('Error fetching business profile:', businessError);
+        } else {
+          setBusinessProfile(businessData as any);
+        }
 
       } catch (error: any) {
         console.error("Error fetching profile:", error.message);
@@ -236,6 +264,130 @@ const ProfilePage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Business Profile Section */}
+            {businessProfile && (
+              <Card className="w-full overflow-hidden shadow-lg mt-6">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-6 w-6 text-blue-600" />
+                    <CardTitle className="text-2xl font-bold text-blue-900">Business Profile</CardTitle>
+                  </div>
+                  <CardDescription className="text-blue-700">
+                    Your business information and professional details
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="h-4 w-4 text-gray-500" />
+                        <h3 className="font-semibold text-gray-500">Business Name</h3>
+                      </div>
+                      <p className="text-gray-800">{businessProfile.business_name}</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <User className="h-4 w-4 text-gray-500" />
+                        <h3 className="font-semibold text-gray-500">Position</h3>
+                      </div>
+                      <p className="text-gray-800">{businessProfile.position}</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Building2 className="h-4 w-4 text-gray-500" />
+                        <h3 className="font-semibold text-gray-500">Industry</h3>
+                      </div>
+                      <p className="text-gray-800">{businessProfile.industry}</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Phone className="h-4 w-4 text-gray-500" />
+                        <h3 className="font-semibold text-gray-500">Phone</h3>
+                        {businessProfile.phone_verified && (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        )}
+                      </div>
+                      <p className="text-gray-800">{businessProfile.phone}</p>
+                      {businessProfile.phone_verified && (
+                        <p className="text-xs text-green-600 mt-1">✓ Verified</p>
+                      )}
+                    </div>
+                    
+                    {businessProfile.linkedin_url && (
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Linkedin className="h-4 w-4 text-gray-500" />
+                          <h3 className="font-semibold text-gray-500">LinkedIn</h3>
+                        </div>
+                        <a 
+                          href={businessProfile.linkedin_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          View Profile
+                        </a>
+                      </div>
+                    )}
+                    
+                    {businessProfile.website_url && (
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Globe className="h-4 w-4 text-gray-500" />
+                          <h3 className="font-semibold text-gray-500">Website</h3>
+                        </div>
+                        <a 
+                          href={businessProfile.website_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-800 underline"
+                        >
+                          Visit Website
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-500">
+                      Business profile created on {new Date(businessProfile.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* No Business Profile Message */}
+            {!businessProfile && (
+              <Card className="w-full overflow-hidden shadow-lg mt-6">
+                <CardHeader className="bg-gradient-to-r from-orange-50 to-yellow-50">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-6 w-6 text-orange-600" />
+                    <CardTitle className="text-2xl font-bold text-orange-900">Business Profile</CardTitle>
+                  </div>
+                  <CardDescription className="text-orange-700">
+                    Complete your business profile to get started
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 text-center">
+                  <div className="space-y-4">
+                    <p className="text-gray-600">
+                      You haven't completed your business profile yet. This helps us provide better lead generation services.
+                    </p>
+                    <Button 
+                      onClick={() => window.location.href = '/onboarding'}
+                      className="bg-orange-600 hover:bg-orange-700"
+                    >
+                      Complete Business Profile
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <DialogContent>
