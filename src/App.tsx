@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import AuthGuard from './components/auth/AuthGuard';
 import AuthPage from './pages/AuthPage';
+import OnboardingPage from './pages/OnboardingPage';
 import ProfilePage from './pages/Profile';
 import NotFound from './pages/NotFound';
 import HomePage from './pages/HomePage';
@@ -24,6 +25,15 @@ function App() {
             element={
               <AuthGuard>
                 <AuthPage />
+              </AuthGuard>
+            }
+          />
+
+          <Route
+            path="/onboarding"
+            element={
+              <AuthGuard>
+                <OnboardingPage />
               </AuthGuard>
             }
           />

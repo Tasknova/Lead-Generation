@@ -123,9 +123,9 @@ const AuthForm: React.FC = () => {
           description: 'Please check your email for a confirmation link.',
         });
         
-        // Redirect to lead generation page after successful signup
+        // Redirect to onboarding page after successful signup
         setTimeout(() => {
-          window.location.href = '/lead-generation';
+          window.location.href = '/onboarding';
         }, 2000);
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -167,7 +167,7 @@ const AuthForm: React.FC = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: { 
-          redirectTo: `${window.location.origin}/lead-generation`,
+          redirectTo: `${window.location.origin}/onboarding`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

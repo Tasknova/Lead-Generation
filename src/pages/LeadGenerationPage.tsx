@@ -9,7 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { TrialCountdown } from '@/components/ui/trial-countdown';
 import { Loader2, Target, Building, MapPin, Users, Briefcase, Globe, Filter, Type, List, Zap, CheckCircle, ArrowRight, Star, TrendingUp, Users as UsersIcon, CreditCard, Gift } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
@@ -25,6 +24,7 @@ const LeadGenerationPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [fullName, setFullName] = useState<string>('');
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const { toast } = useToast();
@@ -90,7 +90,7 @@ const LeadGenerationPage = () => {
           console.error('Error fetching profile:', error);
         } else if (profile) {
           setFullName(profile.full_name || '');
-    
+          setUserProfile(profile);
         }
       }
     };
@@ -238,29 +238,39 @@ const LeadGenerationPage = () => {
   };
   
   const handleGenerateLeads = async () => {
-    // Check if user has a trial package
-    let isTrialRequest = false;
+    // Check if user has free leads available
+    let isFreeRequest = false;
     
-    if (user) {
-      try {
-        const { data: recentOrder } = await supabase
-          .from('payment_orders')
-          .select('is_free_request, package_id')
-          .eq('user_id', user.id)
-          .eq('status', 'success')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-        
-        if (recentOrder) {
-          isTrialRequest = recentOrder.is_free_request || recentOrder.package_id === 'trial';
+    if (user && userProfile) {
+      // Check if user has free leads available and hasn't used them
+      if (!userProfile.free_leads_used) {
+        isFreeRequest = true;
+      } else {
+        // Check if user has a paid package
+        try {
+          const { data: recentOrder } = await supabase
+            .from('payment_orders')
+            .select('is_free_request, package_id, leads_count')
+            .eq('user_id', user.id)
+            .eq('status', 'success')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          
+          if (!recentOrder) {
+            // No paid package, show payment modal
+            setShowPaymentModal(true);
+            return;
+          }
+        } catch (error) {
+          console.log('No recent payment order found, showing payment modal');
+          setShowPaymentModal(true);
+          return;
         }
-      } catch (error) {
-        console.log('No recent payment order found, using default settings');
       }
     }
     
-    await handleGenerateLeadsInternal(isTrialRequest);
+    await handleGenerateLeadsInternal(isFreeRequest);
   };
 
   const handleGenerateLeadsInternal = async (freeRequestFlag: boolean) => {
@@ -301,7 +311,7 @@ const LeadGenerationPage = () => {
           user_name: fullName || user.email!,
           lead_description: jsonDescription, // Use JSON format for dropdown, plain text for manual
           status: 'running',
-          is_free_request: false
+          is_free_request: freeRequestFlag
         })
         .select('id');
       const insertData = Array.isArray(insertDataArr) ? insertDataArr[0] : insertDataArr;
@@ -373,9 +383,31 @@ const LeadGenerationPage = () => {
       }
 
       console.log('Successfully recorded in Supabase and sent data to n8n webhook.');
+      
+      // If this was a free request, mark free leads as used
+      if (freeRequestFlag && user) {
+        try {
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ free_leads_used: true })
+            .eq('id', user.id);
+          
+          if (updateError) {
+            console.error('Error updating free leads status:', updateError);
+          } else {
+            // Update local state
+            setUserProfile(prev => ({ ...prev, free_leads_used: true }));
+          }
+        } catch (error) {
+          console.error('Error updating free leads status:', error);
+        }
+      }
+      
       toast({
         title: 'Success!',
-        description: 'Please wait while we generate your leads. The leads will be sent to your email. It may take upto 25 to 30 mins to generate the leads',
+        description: freeRequestFlag 
+          ? 'Your 10 free leads are being generated! They will be sent to your email within 25-30 minutes.'
+          : 'Please wait while we generate your leads. The leads will be sent to your email. It may take upto 25 to 30 mins to generate the leads',
       });
       setSubmitted(true);
     } catch (error: any) {
@@ -400,7 +432,8 @@ const LeadGenerationPage = () => {
     }
   };
 
-  const canGenerateLeads = termsAccepted && paymentStatus === 'success' && 
+  const canGenerateLeads = termsAccepted && 
+    (paymentStatus === 'success' || (userProfile && !userProfile.free_leads_used)) && 
     (activeMode === 'dropdown' ? (jobTitles.length > 0 && industries.length > 0 && locations.length > 0 && selectedCompanySize) : description.trim().length > 0);
 
   const canProceedToPayment = () => {
@@ -514,10 +547,20 @@ const LeadGenerationPage = () => {
               Generate high-quality leads for your business
             </p>
             
-            {/* Trial Countdown */}
-            <div className="mb-6">
-              <TrialCountdown />
-            </div>
+            {/* Free Leads Information */}
+            {userProfile && !userProfile.free_leads_used && (
+              <div className="mb-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <Gift className="h-5 w-5 text-green-600" />
+                    <h3 className="font-semibold text-green-800">Welcome! You have 10 free leads to get started</h3>
+                  </div>
+                  <p className="text-green-700 text-sm">
+                    Generate your first 10 leads completely free. No payment required!
+                  </p>
+                </div>
+              </div>
+            )}
             
             <div className="flex justify-center items-center gap-8 mt-6">
               {stats.map((stat, index) => (
@@ -722,7 +765,7 @@ const LeadGenerationPage = () => {
                   </div>
 
                   {/* Payment Button */}
-                  {paymentStatus !== 'success' && (
+                  {paymentStatus !== 'success' && userProfile?.free_leads_used && (
                     <Button 
                       onClick={handlePayment} 
                       className="w-full h-12 text-lg font-semibold" 
@@ -737,6 +780,27 @@ const LeadGenerationPage = () => {
                         <>
                           <CreditCard className="mr-2 h-5 w-5" />
                           Choose Package & Pay
+                        </>
+                      )}
+                    </Button>
+                  )}
+
+                  {/* Free Leads Button */}
+                  {userProfile && !userProfile.free_leads_used && (
+                    <Button 
+                      onClick={() => handleGenerateLeads()} 
+                      className="w-full h-12 text-lg font-semibold bg-green-600 hover:bg-green-700" 
+                      disabled={isGenerating || !canGenerateLeads}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                          Generating Free Leads...
+                        </>
+                      ) : (
+                        <>
+                          <Gift className="mr-2 h-5 w-5" />
+                          Generate 10 Free Leads
                         </>
                       )}
                     </Button>

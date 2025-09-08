@@ -6,8 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Loader2, CreditCard, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useTrialTimer } from '@/hooks/use-trial-timer';
-import { TrialCountdown } from '@/components/ui/trial-countdown';
 
 
 interface PaymentModalProps {
@@ -26,13 +24,6 @@ interface LeadPackage {
 
 // Lead packages configuration
 const LEAD_PACKAGES: LeadPackage[] = [
-  {
-    id: 'trial',
-    name: 'Trial Package',
-    leads: 10,
-    price: 9,
-    description: '10 leads for 7 days - Limited time offer'
-  },
   {
     id: 'basic',
     name: 'Basic Package',
@@ -75,16 +66,24 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
   const [selectedPackage, setSelectedPackage] = useState<LeadPackage | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   const { toast } = useToast();
-  
-  // Use the custom trial timer hook
-  const { timeLeft, isExpired } = useTrialTimer();
 
   React.useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      
+      if (user) {
+        // Get user profile to check free leads status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('free_leads_used')
+          .eq('id', user.id)
+          .single();
+        setUserProfile(profile);
+      }
     };
     getUser();
   }, []);
@@ -126,8 +125,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
          throw new Error('Razorpay Key ID is not configured. Add VITE_RAZORPAY_KEY_ID to your .env file');
        }
 
-                             // Determine currency and amount based on package
-         const isTrialPackage = selectedPackage.id === 'trial';
+        // Determine currency and amount based on package
         const currency = 'INR'; // All packages now in INR
         const amount = selectedPackage.price * 100; // Convert to paise for Razorpay (₹1 = 100 paise)
 
@@ -141,8 +139,8 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
             amount: amount,
             currency: currency,
             status: 'created',
-                         leads_count: selectedPackage.leads,
-             is_free_request: isTrialPackage // Set is_free_request to true for trial packages
+            leads_count: selectedPackage.leads,
+            is_free_request: false // All paid packages are not free requests
           })
           .select()
           .single();
@@ -192,7 +190,7 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
                 status: 'success',
                 signature: response.razorpay_signature || '',
                 updated_at: new Date().toISOString(),
-                                 is_free_request: isTrialPackage
+                is_free_request: false
               };
 
               // Add phone number if available
@@ -288,68 +286,69 @@ const SimplePaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, onSu
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Trial Countdown */}
-          <TrialCountdown className="mb-6" />
+          {/* Free Leads Information */}
+          {userProfile && !userProfile.free_leads_used && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <h3 className="font-semibold text-green-800">You have 10 free leads available!</h3>
+              </div>
+              <p className="text-green-700 text-sm">
+                As a new user, you can generate 10 leads for free. Use them before purchasing a package.
+              </p>
+            </div>
+          )}
 
-                     {/* Package Selection */}
-                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {LEAD_PACKAGES.map((pkg) => {
-                 const isTrial = pkg.id === 'trial';
-                 const isComingSoon = pkg.id === 'pro';
-               
-               return (
-                                                                       <Card
-                     key={pkg.id}
-                                         className={`transition-all duration-200 ${
-                        isComingSoon 
-                          ? 'cursor-not-allowed opacity-80 bg-gray-50 relative' 
-                          : selectedPackage?.id === pkg.id
-                          ? 'cursor-pointer ring-2 ring-blue-500 bg-blue-50'
-                          : isTrial
-                          ? 'cursor-pointer border-green-500 bg-green-50 hover:bg-green-100 hover:shadow-lg'
-                          : 'cursor-pointer hover:bg-gray-50 hover:shadow-lg'
-                      }`}
-                     onClick={() => !isComingSoon && handlePackageSelect(pkg)}
-                   >
-                                     <CardHeader className="text-center pb-3">
-                                          <div className="flex justify-center mb-2">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                          isTrial ? 'bg-green-100' : 'bg-blue-100'
-                        }`}>
-                          <Users className={`h-6 w-6 ${
-                            isTrial ? 'text-green-600' : 'text-blue-600'
-                          }`} />
-                        </div>
+          {/* Package Selection */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {LEAD_PACKAGES.map((pkg) => {
+              const isComingSoon = pkg.id === 'pro';
+              
+              return (
+                <Card
+                  key={pkg.id}
+                  className={`transition-all duration-200 ${
+                    isComingSoon 
+                      ? 'cursor-not-allowed opacity-80 bg-gray-50 relative' 
+                      : selectedPackage?.id === pkg.id
+                      ? 'cursor-pointer ring-2 ring-blue-500 bg-blue-50'
+                      : 'cursor-pointer hover:bg-gray-50 hover:shadow-lg'
+                  }`}
+                  onClick={() => !isComingSoon && handlePackageSelect(pkg)}
+                >
+                  <CardHeader className="text-center pb-3">
+                    <div className="flex justify-center mb-2">
+                      <div className="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100">
+                        <Users className="h-6 w-6 text-blue-600" />
                       </div>
-                                          <CardTitle className="text-lg">{pkg.name}</CardTitle>
-                      <CardDescription>{pkg.description}</CardDescription>
-                   </CardHeader>
-                   <CardContent className="text-center pt-0">
-                                                               <div className={`text-3xl font-bold mb-2 ${
-                         isTrial ? 'text-green-600' : 'text-blue-600'
-                       }`}>
-                                                 ₹{pkg.price}
-                       </div>
-                                          <Badge variant="secondary" className="mb-3">
-                        {`${pkg.leads} Lead${pkg.leads > 1 ? 's' : ''}`}
-                      </Badge>
-                                         {selectedPackage?.id === pkg.id && !isComingSoon && (
-                       <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
-                     )}
-                   </CardContent>
-                   
-                   {/* Coming Soon Overlay */}
-                   {isComingSoon && (
-                     <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center rounded-lg">
-                       <div className="text-center text-white">
-                         <div className="text-lg font-bold mb-1">🚧</div>
-                         <div className="text-sm font-semibold">Coming Soon</div>
-                       </div>
-                     </div>
-                   )}
-                 </Card>
-               );
-             })}
+                    </div>
+                    <CardTitle className="text-lg">{pkg.name}</CardTitle>
+                    <CardDescription>{pkg.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center pt-0">
+                    <div className="text-3xl font-bold mb-2 text-blue-600">
+                      ₹{pkg.price}
+                    </div>
+                    <Badge variant="secondary" className="mb-3">
+                      {`${pkg.leads} Lead${pkg.leads > 1 ? 's' : ''}`}
+                    </Badge>
+                    {selectedPackage?.id === pkg.id && !isComingSoon && (
+                      <CheckCircle className="h-5 w-5 text-green-500 mx-auto" />
+                    )}
+                  </CardContent>
+                  
+                  {/* Coming Soon Overlay */}
+                  {isComingSoon && (
+                    <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center rounded-lg">
+                      <div className="text-center text-white">
+                        <div className="text-lg font-bold mb-1">🚧</div>
+                        <div className="text-sm font-semibold">Coming Soon</div>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              );
+            })}
           </div>
 
                                  {/* Selected Package Summary */}

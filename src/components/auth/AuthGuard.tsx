@@ -12,6 +12,7 @@ interface AuthGuardProps {
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasBusinessProfile, setHasBusinessProfile] = useState<boolean | null>(null);
   const location = useLocation();
   const { toast } = useToast();
 
@@ -19,6 +20,25 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     setLoading(true);
     const checkSession = async (currentSession: Session | null) => {
       setSession(currentSession);
+      
+      if (currentSession) {
+        // Check if user has business profile
+        try {
+          const { data: businessProfile } = await supabase
+            .from('business_profiles')
+            .select('id')
+            .eq('user_id', currentSession.user.id)
+            .maybeSingle();
+          
+          setHasBusinessProfile(!!businessProfile);
+        } catch (error) {
+          console.error('Error checking business profile:', error);
+          setHasBusinessProfile(false);
+        }
+      } else {
+        setHasBusinessProfile(null);
+      }
+      
       setLoading(false);
     };
 
@@ -83,9 +103,25 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   if (session) {
     // User is logged in
     console.log('User authenticated, current path:', location.pathname);
+    
     if (isAuthPage) {
-      console.log('Redirecting from auth page to lead-generation');
+      // Redirect from auth page based on business profile status
+      if (hasBusinessProfile === true) {
+        return <Navigate to="/lead-generation" replace />;
+      } else if (hasBusinessProfile === false) {
+        return <Navigate to="/onboarding" replace />;
+      }
+      // If hasBusinessProfile is null, wait for loading to complete
+    }
+
+    // If user is on onboarding page but already has business profile, redirect to lead generation
+    if (location.pathname === '/onboarding' && hasBusinessProfile === true) {
       return <Navigate to="/lead-generation" replace />;
+    }
+
+    // If user is on lead generation but doesn't have business profile, redirect to onboarding
+    if (location.pathname === '/lead-generation' && hasBusinessProfile === false) {
+      return <Navigate to="/onboarding" replace />;
     }
 
     if (isAdminPage) {
