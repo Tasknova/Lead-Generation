@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Navbar, { ProfileContext } from '@/components/ui/navbar';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
@@ -26,6 +27,24 @@ interface BusinessProfile {
   created_at: string;
   updated_at: string;
 }
+
+const INDUSTRY_OPTIONS = [
+  'Technology',
+  'Healthcare',
+  'Finance',
+  'Education',
+  'E-commerce',
+  'Real Estate',
+  'Manufacturing',
+  'Consulting',
+  'Marketing & Advertising',
+  'Legal',
+  'Retail',
+  'Food & Beverage',
+  'Travel & Hospitality',
+  'Non-profit',
+  'Other'
+];
 
 const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -45,6 +64,16 @@ const ProfilePage: React.FC = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [fullName, setFullName] = useState('');
   const [businessProfile, setBusinessProfile] = useState<BusinessProfile | null>(null);
+  const [editBusinessOpen, setEditBusinessOpen] = useState(false);
+  const [editBusinessLoading, setEditBusinessLoading] = useState(false);
+  const [editBusinessData, setEditBusinessData] = useState({
+    businessName: '',
+    position: '',
+    linkedin: '',
+    website: '',
+    industry: '',
+    phone: ''
+  });
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -113,6 +142,20 @@ const ProfilePage: React.FC = () => {
       setEditPasswordConfirm('');
     }
   }, [editOpen, profile]);
+
+  // When opening the business edit dialog, pre-fill fields with current values
+  useEffect(() => {
+    if (editBusinessOpen && businessProfile) {
+      setEditBusinessData({
+        businessName: businessProfile.business_name || '',
+        position: businessProfile.position || '',
+        linkedin: businessProfile.linkedin_url || '',
+        website: businessProfile.website_url || '',
+        industry: businessProfile.industry || '',
+        phone: businessProfile.phone || ''
+      });
+    }
+  }, [editBusinessOpen, businessProfile]);
 
   const getInitials = (name: string) => {
     if (!name) return '';
@@ -200,6 +243,56 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleEditBusinessProfile = async () => {
+    setEditBusinessLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not found');
+
+      const { error: updateError } = await supabase
+        .from('business_profiles')
+        .update({
+          business_name: editBusinessData.businessName,
+          position: editBusinessData.position,
+          linkedin_url: editBusinessData.linkedin || null,
+          website_url: editBusinessData.website || null,
+          industry: editBusinessData.industry as any,
+          phone: editBusinessData.phone,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      setBusinessProfile(prev => prev ? {
+        ...prev,
+        business_name: editBusinessData.businessName,
+        position: editBusinessData.position,
+        linkedin_url: editBusinessData.linkedin || null,
+        website_url: editBusinessData.website || null,
+        industry: editBusinessData.industry as any,
+        phone: editBusinessData.phone,
+        updated_at: new Date().toISOString()
+      } : prev);
+
+      toast({ 
+        title: 'Business profile updated', 
+        description: 'Your business information has been updated successfully.' 
+      });
+      setEditBusinessOpen(false);
+    } catch (error: any) {
+      toast({ 
+        title: 'Update failed', 
+        description: error.message, 
+        variant: 'destructive' 
+      });
+      console.error('Edit Business Profile error:', error);
+    } finally {
+      setEditBusinessLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -276,6 +369,16 @@ const ProfilePage: React.FC = () => {
                   <CardDescription className="text-blue-700">
                     Your business information and professional details
                   </CardDescription>
+                  <div className="flex justify-end">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setEditBusinessOpen(true)}
+                      className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                    >
+                      Edit Business Profile
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -483,6 +586,117 @@ const ProfilePage: React.FC = () => {
                 <Button onClick={handleEditProfile} disabled={editLoading} className="mt-4 w-full">
                   {editLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Save Changes
+                </Button>
+              </DialogContent>
+            </Dialog>
+
+            {/* Business Profile Edit Dialog */}
+            <Dialog open={editBusinessOpen} onOpenChange={setEditBusinessOpen}>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Edit Business Profile</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Business Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="editBusinessName" className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Business Name *
+                      </Label>
+                      <Input
+                        id="editBusinessName"
+                        type="text"
+                        placeholder="Enter your business name"
+                        value={editBusinessData.businessName}
+                        onChange={(e) => setEditBusinessData(prev => ({ ...prev, businessName: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Position */}
+                    <div className="space-y-2">
+                      <Label htmlFor="editPosition" className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Your Position *
+                      </Label>
+                      <Input
+                        id="editPosition"
+                        type="text"
+                        placeholder="e.g., CEO, Marketing Manager"
+                        value={editBusinessData.position}
+                        onChange={(e) => setEditBusinessData(prev => ({ ...prev, position: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* LinkedIn */}
+                    <div className="space-y-2">
+                      <Label htmlFor="editLinkedin" className="flex items-center gap-2">
+                        <Linkedin className="h-4 w-4" />
+                        LinkedIn Profile
+                      </Label>
+                      <Input
+                        id="editLinkedin"
+                        type="url"
+                        placeholder="https://linkedin.com/in/yourprofile"
+                        value={editBusinessData.linkedin}
+                        onChange={(e) => setEditBusinessData(prev => ({ ...prev, linkedin: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Website */}
+                    <div className="space-y-2">
+                      <Label htmlFor="editWebsite" className="flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Business Website
+                      </Label>
+                      <Input
+                        id="editWebsite"
+                        type="url"
+                        placeholder="https://yourbusiness.com"
+                        value={editBusinessData.website}
+                        onChange={(e) => setEditBusinessData(prev => ({ ...prev, website: e.target.value }))}
+                      />
+                    </div>
+
+                    {/* Industry */}
+                    <div className="space-y-2">
+                      <Label htmlFor="editIndustry" className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4" />
+                        Business Industry *
+                      </Label>
+                      <Select value={editBusinessData.industry} onValueChange={(value) => setEditBusinessData(prev => ({ ...prev, industry: value }))}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your industry" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {INDUSTRY_OPTIONS.map((industry) => (
+                            <SelectItem key={industry} value={industry}>
+                              {industry}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Phone Number */}
+                    <div className="space-y-2">
+                      <Label htmlFor="editPhone" className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        Phone Number *
+                      </Label>
+                      <Input
+                        id="editPhone"
+                        type="tel"
+                        placeholder="+91 9876543210"
+                        value={editBusinessData.phone}
+                        onChange={(e) => setEditBusinessData(prev => ({ ...prev, phone: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <Button onClick={handleEditBusinessProfile} disabled={editBusinessLoading} className="mt-4 w-full">
+                  {editBusinessLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Save Business Profile Changes
                 </Button>
               </DialogContent>
             </Dialog>
